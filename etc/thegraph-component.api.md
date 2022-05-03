@@ -25,7 +25,7 @@ export namespace createSubgraphComponent {
     };
 }
 
-// @public (undocumented)
+// @public
 export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<string>;
 
 // (No @packageDocumentation comment for this package)
