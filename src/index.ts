@@ -39,6 +39,7 @@ export async function createSubgraphComponent(
       return data
     } catch (error) {
       const errorMessage = (error as Error).message
+      logger.log(`Error querying subgraph ${url}: ${errorMessage}`)
       metrics.increment("subgraph_errors_total", { url, errorMessage })
 
       if (remainingAttempts > 0) {
