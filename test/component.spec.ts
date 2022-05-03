@@ -1,3 +1,4 @@
+import { ILoggerComponent } from "@well-known-components/interfaces"
 import { IFetchComponent } from "@well-known-components/http-server"
 import { ISubgraphComponent } from "../src/types"
 import { sleep } from "../src/utils"
@@ -47,6 +48,19 @@ test("subraph component", function ({ components, stubComponents }) {
 
         expect(result).toEqual(okResponseData.data)
       })
+
+      it("should forward the variables an query to fetch the subgraph", async () => {
+        const { subgraph } = components
+        const query = "query ThisIsAQuery() {}"
+        const variables = { some: "very interesting", variables: ["we have", "here"] }
+        await subgraph.query(query, variables)
+
+        expect(fetchMock).toHaveBeenCalledWith(SUBGRAPH_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, variables }),
+        })
+      })
     })
 
     describe("when the request errors out", () => {
@@ -84,6 +98,42 @@ test("subraph component", function ({ components, stubComponents }) {
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
             errorMessage: "Invalid request",
+          })
+        })
+
+        describe("and data is logged", () => {
+          let logger: ILoggerComponent.ILogger
+          let subgraph: ISubgraphComponent
+
+          beforeEach(async () => {
+            const { logs } = components
+
+            logger = logs.getLogger("thegraph-port")
+
+            jest.spyOn(logger, "log")
+            jest.spyOn(logs, "getLogger").mockImplementationOnce(() => logger)
+
+            subgraph = await createSubgraphComponent(SUBGRAPH_URL, components)
+          })
+
+          it("should create a thegraph-port logger", async () => {
+            const { logs } = components
+
+            try {
+              await subgraph.query("query", {}, 0)
+            } catch (error) {}
+
+            expect(logs.getLogger).toBeCalledWith("thegraph-port")
+          })
+
+          it("should append the correct verb to the log", async () => {
+            try {
+              await subgraph.query("query", {}, 3)
+            } catch (error) {}
+
+            expect(logger.log).toBeCalledWith(`Querying subgraph ${SUBGRAPH_URL}`)
+            expect(logger.log).toBeCalledWith(`Retrying query to subgraph ${SUBGRAPH_URL}`)
+            expect(logger.log).toBeCalledWith(`Retrying query to subgraph ${SUBGRAPH_URL}`)
           })
         })
       })
@@ -190,7 +240,7 @@ test("subraph component", function ({ components, stubComponents }) {
               .spyOn(config, "getNumber")
               .mockImplementation(async (name: string) => (name === "SUBGRAPH_COMPONENT_RETRIES" ? retries : 0))
 
-            subgraph = await createSubgraphComponent("http://some-url", components)
+            subgraph = await createSubgraphComponent(SUBGRAPH_URL, components)
           })
 
           it("should retry the supplied amount of times", async () => {

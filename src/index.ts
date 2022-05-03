@@ -19,7 +19,7 @@ export async function createSubgraphComponent(
   const BACKOFF = (await config.getNumber("SUBGRAPH_COMPONENT_BACKOFF")) || 500
 
   async function executeQuery<T>(query: string, variables: Variables = {}, remainingAttempts?: number): Promise<T> {
-    logger.log(remainingAttempts !== RETRIES ? `Querying subgraph ${url}` : `Retrying query to subgraph ${url}`)
+    logger.log(remainingAttempts === RETRIES ? `Querying subgraph ${url}` : `Retrying query to subgraph ${url}`)
     remainingAttempts = remainingAttempts === undefined ? RETRIES : remainingAttempts
 
     try {
@@ -39,7 +39,6 @@ export async function createSubgraphComponent(
       return data
     } catch (error) {
       const errorMessage = (error as Error).message
-      logger.log(`Error querying subgraph ${url}: ${errorMessage}`)
       metrics.increment("subgraph_errors_total", { url, errorMessage })
 
       if (remainingAttempts > 0) {
