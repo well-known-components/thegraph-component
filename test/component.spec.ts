@@ -20,7 +20,7 @@ test("subraph component", function ({ components, stubComponents }) {
       jest.spyOn(metrics, "increment")
     })
 
-    describe("when the request is ok", () => {
+    describe("and the request is ok", () => {
       let okResponseData: { data: any }
 
       beforeEach(() => {
@@ -52,7 +52,7 @@ test("subraph component", function ({ components, stubComponents }) {
     describe("when the request errors out", () => {
       let errorResponseData: { errors: string[] }
 
-      describe("when the server has an internal error", () => {
+      describe("and the server has an internal error", () => {
         beforeEach(() => {
           const { fetch } = components
 
@@ -116,7 +116,7 @@ test("subraph component", function ({ components, stubComponents }) {
           })
         })
 
-        describe("when there's multiple errors", () => {
+        describe("and there's multiple errors", () => {
           beforeEach(() => {
             errorResponseData = {
               errors: ["some error", "happened"],
@@ -133,7 +133,7 @@ test("subraph component", function ({ components, stubComponents }) {
           })
         })
 
-        describe("when there's an empty errors prop", () => {
+        describe("and there's an empty errors prop", () => {
           it("should throw an Invalid Response error", async () => {
             const { subgraph } = components
             try {
