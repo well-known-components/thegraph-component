@@ -83,7 +83,7 @@ test("subraph component", function ({ components, stubComponents }) {
           try {
             await subgraph.query("query", {}, 0) // no retires
           } catch (error) {
-            expect(error.message).toBe("Invalid request")
+            expect(error.message).toBe(`Invalid request. Status: ${response.status}`)
           }
         })
 
@@ -97,7 +97,7 @@ test("subraph component", function ({ components, stubComponents }) {
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
-            errorMessage: "Invalid request",
+            errorMessage: `Invalid request. Status: ${response.status}`,
           })
         })
 
@@ -110,7 +110,7 @@ test("subraph component", function ({ components, stubComponents }) {
 
             logger = logs.getLogger("thegraph-port")
 
-            jest.spyOn(logger, "log")
+            jest.spyOn(logger, "info")
             jest.spyOn(logs, "getLogger").mockImplementationOnce(() => logger)
 
             subgraph = await createSubgraphComponent(SUBGRAPH_URL, components)
@@ -131,9 +131,9 @@ test("subraph component", function ({ components, stubComponents }) {
               await subgraph.query("query", {}, 3)
             } catch (error) {}
 
-            expect(logger.log).toBeCalledWith(`Querying subgraph ${SUBGRAPH_URL}`)
-            expect(logger.log).toBeCalledWith(`Retrying query to subgraph ${SUBGRAPH_URL}`)
-            expect(logger.log).toBeCalledWith(`Retrying query to subgraph ${SUBGRAPH_URL}`)
+            expect(logger.info).toBeCalledWith(`Querying subgraph ${SUBGRAPH_URL}`)
+            expect(logger.info).toBeCalledWith(`Retrying query to subgraph ${SUBGRAPH_URL}`)
+            expect(logger.info).toBeCalledWith(`Retrying query to subgraph ${SUBGRAPH_URL}`)
           })
         })
       })
@@ -166,6 +166,17 @@ test("subraph component", function ({ components, stubComponents }) {
           })
         })
 
+        describe("and there's an empty errors prop", () => {
+          it("should throw an Invalid Response error", async () => {
+            const { subgraph } = components
+            try {
+              await subgraph.query("query", {}, 0) // no retires
+            } catch (error) {
+              expect(error.message).toBe("GraphQL Error: Invalid response")
+            }
+          })
+        })
+
         describe("and there's multiple errors", () => {
           beforeEach(() => {
             errorResponseData = {
@@ -179,17 +190,6 @@ test("subraph component", function ({ components, stubComponents }) {
               await subgraph.query("query", {}, 0) // no retires
             } catch (error) {
               expect(error.message).toBe("There was a total of 2. GraphQL errors:\n- some error\n- happened")
-            }
-          })
-        })
-
-        describe("and there's an empty errors prop", () => {
-          it("should throw an Invalid Response error", async () => {
-            const { subgraph } = components
-            try {
-              await subgraph.query("query", {}, 0) // no retires
-            } catch (error) {
-              expect(error.message).toBe("GraphQL Error: Invalid response")
             }
           })
         })

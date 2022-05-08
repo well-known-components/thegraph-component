@@ -18,9 +18,12 @@ export async function createSubgraphComponent(
   const TIMEOUT = (await config.getNumber("SUBGRAPH_COMPONENT_QUERY_TIMEOUT")) || 5000
   const BACKOFF = (await config.getNumber("SUBGRAPH_COMPONENT_BACKOFF")) || 500
 
-  async function executeQuery<T>(query: string, variables: Variables = {}, remainingAttempts?: number): Promise<T> {
-    logger.log(remainingAttempts === RETRIES ? `Querying subgraph ${url}` : `Retrying query to subgraph ${url}`)
-    remainingAttempts = remainingAttempts === undefined ? RETRIES : remainingAttempts
+  async function executeQuery<T>(
+    query: string,
+    variables: Variables = {},
+    remainingAttempts: number = RETRIES
+  ): Promise<T> {
+    logger.info(remainingAttempts === RETRIES ? `Querying subgraph ${url}` : `Retrying query to subgraph ${url}`)
 
     try {
       const { data, errors } = await withTimeout(() => postQuery<T>(query, variables), TIMEOUT)
@@ -39,7 +42,7 @@ export async function createSubgraphComponent(
       return data
     } catch (error) {
       const errorMessage = (error as Error).message
-      logger.log(`Error querying subgraph ${url}: ${errorMessage}`)
+      logger.error(`Error querying subgraph ${url}: ${errorMessage}`)
       metrics.increment("subgraph_errors_total", { url, errorMessage })
 
       if (remainingAttempts > 0) {
@@ -59,7 +62,7 @@ export async function createSubgraphComponent(
     })
 
     if (!response.ok) {
-      throw new Error("Invalid request")
+      throw new Error(`Invalid request. Status: ${response.status}`)
     }
 
     return (await response.json()) as SubgraphResponse<T>
