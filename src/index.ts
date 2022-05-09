@@ -1,7 +1,8 @@
 import { IFetchComponent } from "@well-known-components/http-server"
 import { IConfigComponent, ILoggerComponent, IMetricsComponent } from "@well-known-components/interfaces"
+import { setTimeout } from "timers/promises"
 import { ISubgraphComponent, SubgraphResponse, Variables } from "./types"
-import { sleep } from "./utils"
+import { withTimeout } from "./utils"
 
 /**
  * @public
@@ -26,7 +27,10 @@ export async function createSubgraphComponent(
     logger.info(remainingAttempts === RETRIES ? `Querying subgraph ${url}` : `Retrying query to subgraph ${url}`)
 
     try {
-      const { data, errors } = await withTimeout(() => postQuery<T>(query, variables), TIMEOUT)
+      const { data, errors } = await withTimeout(
+        (abortController) => postQuery<T>(query, variables, abortController),
+        TIMEOUT
+      )
 
       const hasInvalidData = !data || Object.keys(data).length === 0
       const hasMultipleErrors = errors && errors.length > 1
@@ -42,11 +46,12 @@ export async function createSubgraphComponent(
       return data
     } catch (error) {
       const errorMessage = (error as Error).message
+
       logger.error(`Error querying subgraph ${url}: ${errorMessage}`)
       metrics.increment("subgraph_errors_total", { url, errorMessage })
 
       if (remainingAttempts > 0) {
-        await sleep(BACKOFF)
+        await setTimeout(BACKOFF)
         return executeQuery<T>(query, variables, remainingAttempts - 1)
       } else {
         throw error // bubble up
@@ -54,11 +59,16 @@ export async function createSubgraphComponent(
     }
   }
 
-  async function postQuery<T>(query: string, variables: Variables): Promise<SubgraphResponse<T>> {
+  async function postQuery<T>(
+    query: string,
+    variables: Variables,
+    abortController: AbortController
+  ): Promise<SubgraphResponse<T>> {
     const response = await fetch.fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, variables }),
+      signal: abortController.signal,
     })
 
     if (!response.ok) {
@@ -66,15 +76,6 @@ export async function createSubgraphComponent(
     }
 
     return (await response.json()) as SubgraphResponse<T>
-  }
-
-  async function withTimeout<T>(fn: () => Promise<T>, timeout: number): Promise<T> {
-    return await Promise.race([
-      fn(),
-      sleep(timeout).then(() => {
-        throw new Error("Query timed-out")
-      }),
-    ])
   }
 
   return {

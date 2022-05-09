@@ -1,7 +1,7 @@
 import { ILoggerComponent } from "@well-known-components/interfaces"
 import { IFetchComponent } from "@well-known-components/http-server"
+import { setTimeout } from "timers/promises"
 import { ISubgraphComponent } from "../src/types"
-import { sleep } from "../src/utils"
 import { createSubgraphComponent } from "../src"
 import { SUBGRAPH_URL, test } from "./components"
 
@@ -49,7 +49,7 @@ test("subraph component", function ({ components, stubComponents }) {
         expect(result).toEqual(okResponseData.data)
       })
 
-      it("should forward the variables an query to fetch the subgraph", async () => {
+      it("should forward the variables and query to fetch the subgraph", async () => {
         const { subgraph } = components
         const query = "query ThisIsAQuery() {}"
         const variables = { some: "very interesting", variables: ["we have", "here"] }
@@ -59,6 +59,7 @@ test("subraph component", function ({ components, stubComponents }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query, variables }),
+          signal: expect.any(AbortSignal),
         })
       })
     })
@@ -268,7 +269,7 @@ test("subraph component", function ({ components, stubComponents }) {
             .spyOn(config, "getNumber")
             .mockImplementation(async (name: string) => (name === "SUBGRAPH_COMPONENT_QUERY_TIMEOUT" ? timeout : 0))
 
-          fetchMock = jest.spyOn(fetch, "fetch").mockImplementation(() => sleep(timeout + 1000) as any)
+          fetchMock = jest.spyOn(fetch, "fetch").mockImplementation(() => setTimeout(timeout + 1000))
 
           subgraph = await createSubgraphComponent(SUBGRAPH_URL, components)
         })
