@@ -4,6 +4,9 @@
   "description": "base component",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "engines": {
+    "node": ">=16"
+  },
   "scripts": {},
   "repository": {
     "type": "git",
