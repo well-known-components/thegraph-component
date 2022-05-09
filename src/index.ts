@@ -5,6 +5,9 @@ import { ISubgraphComponent, SubgraphResponse, Variables } from "./types"
 import { withTimeout } from "./utils"
 
 /**
+ * Query thegraph's (https://thegraph.com) subgraphs via HTTP.
+ * Connections will be retried and dropped after a timeout.
+ * For the connection to be properly aborted, the fetch component supplied via IFetchComponent should support AbortController signals
  * @public
  */
 export async function createSubgraphComponent(
