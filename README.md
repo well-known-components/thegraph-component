@@ -18,7 +18,7 @@ await createSubgraphComponent(url, { config, logs, metrics, fetch })
 The main API is:
 
 ```ts
-query: <T>(query: string, variables?: Variables, attempts?: number) => Promise<T>
+query: <T>(query: string, variables?: Variables) => Promise<T>
 ```
 
 So you can call it like this:

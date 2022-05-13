@@ -11,7 +11,7 @@ import { IMetricsComponent } from '@well-known-components/interfaces';
 
 // Warning: (ae-forgotten-export) The symbol "ISubgraphComponent" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export function createSubgraphComponent(url: string, components: createSubgraphComponent.NeededComponents): Promise<ISubgraphComponent>;
 
 // @public (undocumented)
@@ -25,7 +25,7 @@ export namespace createSubgraphComponent {
     };
 }
 
-// @public (undocumented)
+// @public
 export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<string>;
 
 // (No @packageDocumentation comment for this package)
