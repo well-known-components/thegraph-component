@@ -14,8 +14,8 @@ export type SubgraphResponse<T> = { data: T; errors?: { message: string }[] }
 export interface ISubgraphComponent {
   /**
    * Query the subgraph using GraphQL
-   * @param query String version of a GraphQL query
-   * @param variables Any variables present on the query, if any
+   * @param query - String version of a GraphQL query
+   * @param variables - Any variables present on the query, if any
    * @returns Query result
    */
   query: <T>(query: string, variables?: Variables, remainingAttempts?: number) => Promise<T>

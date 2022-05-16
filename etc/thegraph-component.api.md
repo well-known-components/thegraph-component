@@ -50,9 +50,6 @@ export type SubgraphResponse<T> = {
 // @public (undocumented)
 export type Variables = Record<string, string[] | string | number | boolean | undefined>;
 
-// @public (undocumented)
-export function withTimeout<T>(callback: (abortController: AbortController) => Promise<T>, timeout: number): Promise<T>;
-
 // (No @packageDocumentation comment for this package)
 
 ```

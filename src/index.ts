@@ -5,7 +5,6 @@ import { ISubgraphComponent, SubgraphResponse, Variables } from "./types"
 import { withTimeout } from "./utils"
 
 export * from "./types"
-export { withTimeout } from "./utils"
 
 /**
  * Query thegraph's (https://thegraph.com) subgraphs via HTTP.
