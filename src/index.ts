@@ -4,6 +4,9 @@ import { setTimeout } from "timers/promises"
 import { ISubgraphComponent, SubgraphResponse, Variables } from "./types"
 import { withTimeout } from "./utils"
 
+export * from "./types"
+export { withTimeout } from "./utils"
+
 /**
  * Query thegraph's (https://thegraph.com) subgraphs via HTTP.
  * Connections will be retried and dropped after a timeout.
