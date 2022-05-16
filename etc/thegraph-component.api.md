@@ -9,8 +9,6 @@ import { IFetchComponent } from '@well-known-components/http-server';
 import { ILoggerComponent } from '@well-known-components/interfaces';
 import { IMetricsComponent } from '@well-known-components/interfaces';
 
-// Warning: (ae-forgotten-export) The symbol "ISubgraphComponent" needs to be exported by the entry point index.d.ts
-//
 // @public
 export function createSubgraphComponent(url: string, components: createSubgraphComponent.NeededComponents): Promise<ISubgraphComponent>;
 
@@ -25,8 +23,35 @@ export namespace createSubgraphComponent {
     };
 }
 
+// @public (undocumented)
+export interface ISubgraphComponent {
+    query: <T>(query: string, variables?: Variables, remainingAttempts?: number) => Promise<T>;
+}
+
+// @public (undocumented)
+export namespace ISubgraphComponent {
+    // (undocumented)
+    export type Composable = {
+        subgraph: ISubgraphComponent;
+    };
+}
+
 // @public
 export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<string>;
+
+// @public (undocumented)
+export type SubgraphResponse<T> = {
+    data: T;
+    errors?: {
+        message: string;
+    }[];
+};
+
+// @public (undocumented)
+export type Variables = Record<string, string[] | string | number | boolean | undefined>;
+
+// @public (undocumented)
+export function withTimeout<T>(callback: (abortController: AbortController) => Promise<T>, timeout: number): Promise<T>;
 
 // (No @packageDocumentation comment for this package)
 
