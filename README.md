@@ -31,11 +31,11 @@ type Element = {
 
 function getElementsQuery() {
   return `query getCollection($count: Number!) {
-		elements(where: { count_gt: $count }) {
-			id
-			count
-		}
-	}`
+    elements(where: { count_gt: $count }) {
+      id
+      count
+    }
+  }`
 }
 
 await subgraph.query<{ elements: Element[] }>(getElementsQuery(), { count: 5 })
