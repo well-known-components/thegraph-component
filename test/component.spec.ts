@@ -132,9 +132,11 @@ test("subraph component", function ({ components, stubComponents }) {
               await subgraph.query("query", {}, 3)
             } catch (error) {}
 
-            expect(logger.info).toBeCalledWith(`Querying subgraph ${SUBGRAPH_URL}`)
-            expect(logger.info).toBeCalledWith(`Retrying query to subgraph ${SUBGRAPH_URL}`)
-            expect(logger.info).toBeCalledWith(`Retrying query to subgraph ${SUBGRAPH_URL}`)
+            expect(logger.info).toHaveBeenCalledTimes(4)
+            expect(logger.info).toBeCalledWith(`Querying: ${SUBGRAPH_URL}. Attempt: 1/4. Timeouts in: 2000ms`)
+            expect(logger.info).toBeCalledWith(`Querying: ${SUBGRAPH_URL}. Attempt: 2/4. Timeouts in: 2001ms`)
+            expect(logger.info).toBeCalledWith(`Querying: ${SUBGRAPH_URL}. Attempt: 3/4. Timeouts in: 2002ms`)
+            expect(logger.info).toBeCalledWith(`Querying: ${SUBGRAPH_URL}. Attempt: 4/4. Timeouts in: 2003ms`)
           })
         })
       })
@@ -237,9 +239,18 @@ test("subraph component", function ({ components, stubComponents }) {
 
           beforeEach(async () => {
             const { config } = components
-            jest
-              .spyOn(config, "getNumber")
-              .mockImplementation(async (name: string) => (name === "SUBGRAPH_COMPONENT_RETRIES" ? retries : 0))
+            jest.spyOn(config, "getNumber").mockImplementation(async (name: string) => {
+              switch (name) {
+                case "SUBGRAPH_COMPONENT_QUERY_TIMEOUT_WAIT":
+                  return 500
+                case "SUBGRAPH_COMPONENT_TIMEOUT_WAIT_INCREMENT":
+                  return 1
+                case "SUBGRAPH_COMPONENT_RETRIES":
+                  return retries
+                default:
+                  return 0
+              }
+            })
 
             subgraph = await createSubgraphComponent(SUBGRAPH_URL, components)
           })
@@ -265,9 +276,16 @@ test("subraph component", function ({ components, stubComponents }) {
 
         beforeEach(async () => {
           const { config, fetch } = components
-          jest
-            .spyOn(config, "getNumber")
-            .mockImplementation(async (name: string) => (name === "SUBGRAPH_COMPONENT_QUERY_TIMEOUT" ? timeout : 0))
+          jest.spyOn(config, "getNumber").mockImplementation(async (name: string) => {
+            switch (name) {
+              case "SUBGRAPH_COMPONENT_QUERY_TIMEOUT_WAIT":
+                return timeout
+              case "SUBGRAPH_COMPONENT_TIMEOUT_WAIT_INCREMENT":
+                return 1
+              default:
+                return 0
+            }
+          })
 
           fetchMock = jest.spyOn(fetch, "fetch").mockImplementation(() => setTimeout(timeout + 1000))
 
