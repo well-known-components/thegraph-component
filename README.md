@@ -46,5 +46,6 @@ await subgraph.query<{ elements: Element[] }>(getElementsQuery(), { count: 5 })
 It supports two ENV variables:
 
 - `SUBGRAPH_COMPONENT_RETRIES`: How many retries per subraph query. Defaults to `3`.
-- `SUBGRAPH_COMPONENT_QUERY_TIMEOUT`: How long to wait until a connection is timed-out. Defaults to `5000`ms or 5 seconds.
+- `SUBGRAPH_COMPONENT_QUERY_TIMEOUT`: How long to wait until a connection is timed-out. Defaults to `10000`ms or 10 seconds.
+- `SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT`: How much time to add after each retry. The value will be multiplied for the attempt number. For example: if the increment is 10000, it'll wait 10s the first retry, 20s next, 30s, etc. Defaults to `10000`ms or 10 seconds.
 - `SUBGRAPH_COMPONENT_BACKOFF`: How long to wait until a new query is tried after an unsuccessfull one (retrying). Defaults to `500`ms.
