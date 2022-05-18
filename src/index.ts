@@ -1,5 +1,6 @@
 import { IFetchComponent } from "@well-known-components/http-server"
 import { IConfigComponent, ILoggerComponent, IMetricsComponent } from "@well-known-components/interfaces"
+import { randomUUID } from "crypto"
 import { setTimeout } from "timers/promises"
 import { ISubgraphComponent, SubgraphResponse, Variables } from "./types"
 import { withTimeout } from "./utils"
@@ -21,8 +22,8 @@ export async function createSubgraphComponent(
   const logger = logs.getLogger("thegraph-port")
 
   const RETRIES = (await config.getNumber("SUBGRAPH_COMPONENT_RETRIES")) || 3
-  const TIMEOUT_WAIT = (await config.getNumber("SUBGRAPH_COMPONENT_QUERY_TIMEOUT_WAIT")) || 10000
-  const TIMEOUT_WAIT_INCREMENT = (await config.getNumber("SUBGRAPH_COMPONENT_TIMEOUT_WAIT_INCREMENT")) || 10000
+  const TIMEOUT = (await config.getNumber("SUBGRAPH_COMPONENT_QUERY_TIMEOUT")) || 10000
+  const TIMEOUT_INCREMENT = (await config.getNumber("SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT")) || 10000
   const BACKOFF = (await config.getNumber("SUBGRAPH_COMPONENT_BACKOFF")) || 500
 
   async function executeQuery<T>(
@@ -33,9 +34,12 @@ export async function createSubgraphComponent(
     const attempt = RETRIES - remainingAttempts
     const attempts = RETRIES + 1
     const currentAttempt = attempt + 1
-    const timeoutWait = TIMEOUT_WAIT + attempt * TIMEOUT_WAIT_INCREMENT
 
-    logger.info(`Querying: ${url}. Attempt: ${currentAttempt}/${attempts}. Timeouts in: ${timeoutWait}ms`)
+    const timeoutWait = TIMEOUT + attempt * TIMEOUT_INCREMENT
+    const queryId = randomUUID()
+    const logData = { queryId, currentAttempt, attempts, timeoutWait, url }
+
+    logger.info("Querying:", logData)
 
     try {
       const { data, errors } = await withTimeout(
@@ -54,11 +58,13 @@ export async function createSubgraphComponent(
         )
       }
 
+      logger.info("Success:", logData)
+
       return data
     } catch (error) {
       const errorMessage = (error as Error).message
 
-      logger.error(`Error querying ${url}: ${errorMessage}`)
+      logger.error("Error:", { ...logData, errorMessage })
       metrics.increment("subgraph_errors_total", { url, errorMessage })
 
       if (remainingAttempts > 0) {

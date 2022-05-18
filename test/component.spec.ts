@@ -1,11 +1,14 @@
 import { ILoggerComponent } from "@well-known-components/interfaces"
 import { IFetchComponent } from "@well-known-components/http-server"
+import { randomUUID } from "crypto"
 import { setTimeout } from "timers/promises"
 import { ISubgraphComponent } from "../src/types"
 import { createSubgraphComponent } from "../src"
 import { SUBGRAPH_URL, test } from "./components"
 
 type Response = Awaited<ReturnType<IFetchComponent["fetch"]>>
+
+jest.mock("crypto")
 
 test("subraph component", function ({ components, stubComponents }) {
   afterEach(() => {
@@ -103,6 +106,7 @@ test("subraph component", function ({ components, stubComponents }) {
         })
 
         describe("and data is logged", () => {
+          const queryId = "2b37f834-9c39-4eb3-b716-8e7b3a3f6b3c"
           let logger: ILoggerComponent.ILogger
           let subgraph: ISubgraphComponent
 
@@ -113,6 +117,7 @@ test("subraph component", function ({ components, stubComponents }) {
 
             jest.spyOn(logger, "info")
             jest.spyOn(logs, "getLogger").mockImplementationOnce(() => logger)
+            ;(randomUUID as jest.Mock).mockReturnValue(queryId)
 
             subgraph = await createSubgraphComponent(SUBGRAPH_URL, components)
           })
@@ -132,11 +137,19 @@ test("subraph component", function ({ components, stubComponents }) {
               await subgraph.query("query", {}, 3)
             } catch (error) {}
 
+            const logData = {
+              queryId,
+              currentAttempt: 1,
+              attempts: 4,
+              timeoutWait: 2000,
+              url: SUBGRAPH_URL,
+            }
+
             expect(logger.info).toHaveBeenCalledTimes(4)
-            expect(logger.info).toBeCalledWith(`Querying: ${SUBGRAPH_URL}. Attempt: 1/4. Timeouts in: 2000ms`)
-            expect(logger.info).toBeCalledWith(`Querying: ${SUBGRAPH_URL}. Attempt: 2/4. Timeouts in: 2001ms`)
-            expect(logger.info).toBeCalledWith(`Querying: ${SUBGRAPH_URL}. Attempt: 3/4. Timeouts in: 2002ms`)
-            expect(logger.info).toBeCalledWith(`Querying: ${SUBGRAPH_URL}. Attempt: 4/4. Timeouts in: 2003ms`)
+            expect(logger.info).toBeCalledWith("Querying:", logData)
+            expect(logger.info).toBeCalledWith("Querying:", { ...logData, currentAttempt: 2, timeoutWait: 2001 })
+            expect(logger.info).toBeCalledWith("Querying:", { ...logData, currentAttempt: 3, timeoutWait: 2002 })
+            expect(logger.info).toBeCalledWith("Querying:", { ...logData, currentAttempt: 4, timeoutWait: 2003 })
           })
         })
       })
@@ -241,9 +254,9 @@ test("subraph component", function ({ components, stubComponents }) {
             const { config } = components
             jest.spyOn(config, "getNumber").mockImplementation(async (name: string) => {
               switch (name) {
-                case "SUBGRAPH_COMPONENT_QUERY_TIMEOUT_WAIT":
+                case "SUBGRAPH_COMPONENT_QUERY_TIMEOUT":
                   return 500
-                case "SUBGRAPH_COMPONENT_TIMEOUT_WAIT_INCREMENT":
+                case "SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT":
                   return 1
                 case "SUBGRAPH_COMPONENT_RETRIES":
                   return retries
@@ -278,9 +291,9 @@ test("subraph component", function ({ components, stubComponents }) {
           const { config, fetch } = components
           jest.spyOn(config, "getNumber").mockImplementation(async (name: string) => {
             switch (name) {
-              case "SUBGRAPH_COMPONENT_QUERY_TIMEOUT_WAIT":
+              case "SUBGRAPH_COMPONENT_QUERY_TIMEOUT":
                 return timeout
-              case "SUBGRAPH_COMPONENT_TIMEOUT_WAIT_INCREMENT":
+              case "SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT":
                 return 1
               default:
                 return 0

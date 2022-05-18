@@ -42,8 +42,8 @@ export const test = createRunner<TestComponents>({
   async initComponents(): Promise<TestComponents> {
     const config = createConfigComponent(process.env, {
       // To avoid open timeout handles, we keep the retry timeouts at bay
-      SUBGRAPH_COMPONENT_QUERY_TIMEOUT_WAIT: "2000",
-      SUBGRAPH_COMPONENT_TIMEOUT_WAIT_INCREMENT: "1",
+      SUBGRAPH_COMPONENT_QUERY_TIMEOUT: "2000",
+      SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT: "1",
     })
 
     const logs = createTestConsoleLogComponent()
