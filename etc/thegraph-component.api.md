@@ -10,7 +10,7 @@ import { ILoggerComponent } from '@well-known-components/interfaces';
 import { IMetricsComponent } from '@well-known-components/interfaces';
 
 // @public
-export function createSubgraphComponent(url: string, components: createSubgraphComponent.NeededComponents): Promise<ISubgraphComponent>;
+export function createSubgraphComponent(components: createSubgraphComponent.NeededComponents, url: string): Promise<ISubgraphComponent>;
 
 // @public (undocumented)
 export namespace createSubgraphComponent {

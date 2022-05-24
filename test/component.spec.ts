@@ -119,7 +119,7 @@ test("subraph component", function ({ components, stubComponents }) {
             jest.spyOn(logs, "getLogger").mockImplementationOnce(() => logger)
             ;(randomUUID as jest.Mock).mockReturnValue(queryId)
 
-            subgraph = await createSubgraphComponent(SUBGRAPH_URL, components)
+            subgraph = await createSubgraphComponent(components, SUBGRAPH_URL)
           })
 
           it("should create a thegraph-port logger", async () => {
@@ -265,7 +265,7 @@ test("subraph component", function ({ components, stubComponents }) {
               }
             })
 
-            subgraph = await createSubgraphComponent(SUBGRAPH_URL, components)
+            subgraph = await createSubgraphComponent(components, SUBGRAPH_URL)
           })
 
           it("should retry the supplied amount of times", async () => {
@@ -302,7 +302,7 @@ test("subraph component", function ({ components, stubComponents }) {
 
           fetchMock = jest.spyOn(fetch, "fetch").mockImplementation(() => setTimeout(timeout + 1000))
 
-          subgraph = await createSubgraphComponent(SUBGRAPH_URL, components)
+          subgraph = await createSubgraphComponent(components, SUBGRAPH_URL)
         })
 
         it("should throw the appropiate error", async () => {
