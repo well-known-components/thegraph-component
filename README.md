@@ -43,7 +43,7 @@ await subgraph.query<{ elements: Element[] }>(getElementsQuery(), { count: 5 })
 
 ### Configuration
 
-It supports two ENV variables:
+It supports the following ENV variables:
 
 - `SUBGRAPH_COMPONENT_RETRIES`: How many retries per subraph query. Defaults to `3`.
 - `SUBGRAPH_COMPONENT_QUERY_TIMEOUT`: How long to wait until a connection is timed-out. Defaults to `10000`ms or 10 seconds.
