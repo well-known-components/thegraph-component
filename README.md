@@ -10,7 +10,7 @@ To create the component you'll have to supply the subgraph's url. You can get it
 
 ```ts
 const url = "https://api.thegraph.com/subgraphs/name/decentraland/marketplace"
-await createSubgraphComponent(url, { config, logs, metrics, fetch })
+await createSubgraphComponent({ config, logs, metrics, fetch }, url)
 ```
 
 **Query**

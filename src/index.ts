@@ -14,8 +14,8 @@ export * from "./types"
  * @public
  */
 export async function createSubgraphComponent(
-  url: string,
-  components: createSubgraphComponent.NeededComponents
+  components: createSubgraphComponent.NeededComponents,
+  url: string
 ): Promise<ISubgraphComponent> {
   const { logs, metrics, config, fetch } = components
 

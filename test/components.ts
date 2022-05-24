@@ -56,7 +56,7 @@ export const test = createRunner<TestComponents>({
       },
     }
 
-    const subgraph = await createSubgraphComponent(SUBGRAPH_URL, { config, logs, metrics, fetch: subgraphFetch })
+    const subgraph = await createSubgraphComponent({ config, logs, metrics, fetch: subgraphFetch }, SUBGRAPH_URL)
 
     return {
       config,
