@@ -1,7 +1,7 @@
 {
   "name": "@well-known-components/thegraph-component",
   "version": "1.0.0",
-  "description": "base component",
+  "description": "Component to interact with https://thegraph.com/ APIs easily",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "engines": {
