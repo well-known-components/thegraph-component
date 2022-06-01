@@ -7,11 +7,9 @@ export async function withTimeout<T>(
   const callbackAbortController = new AbortController()
   const timeoutAbortController = new AbortController()
 
-  const request = callback(callbackAbortController)
-    .then((result) => result)
-    .finally(() => {
-      timeoutAbortController.abort()
-    })
+  const request = callback(callbackAbortController).finally(() => {
+    timeoutAbortController.abort()
+  })
 
   setTimeout(timeout, "Timeout", { signal: timeoutAbortController.signal })
     .then(() => {
