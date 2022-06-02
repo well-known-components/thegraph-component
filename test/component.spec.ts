@@ -95,9 +95,7 @@ test("subraph component", function ({ components, stubComponents }) {
 
         it("should throw the appropiate error", async () => {
           const { subgraph } = components
-          await expect(() => subgraph.query("query", {}, 0)).rejects.toThrow(
-            `Invalid request. Status: ${response.status}`
-          )
+          await expect(subgraph.query("query", {}, 0)).rejects.toThrow(`Invalid request. Status: ${response.status}`)
         })
 
         it("should increment the metric", async () => {
@@ -194,7 +192,7 @@ test("subraph component", function ({ components, stubComponents }) {
         describe("and there's an empty errors prop", () => {
           it("should throw an Invalid Response error", async () => {
             const { subgraph } = components
-            await expect(() => subgraph.query("query", {}, 0)).rejects.toThrow("GraphQL Error: Invalid response")
+            await expect(subgraph.query("query", {}, 0)).rejects.toThrow("GraphQL Error: Invalid response")
           })
         })
 
@@ -207,7 +205,7 @@ test("subraph component", function ({ components, stubComponents }) {
 
           it("should throw them all", async () => {
             const { subgraph } = components
-            await expect(() => subgraph.query("query", {}, 0)).rejects.toThrow(
+            await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
               "There was a total of 2. GraphQL errors:\n- some error\n- happened"
             )
           })
@@ -305,7 +303,7 @@ test("subraph component", function ({ components, stubComponents }) {
         })
 
         it("should throw the appropiate error", async () => {
-          await expect(() => subgraph.query("query")).rejects.toThrow(errorMessage)
+          await expect(subgraph.query("query")).rejects.toThrow(errorMessage)
         })
 
         it("should increment the metric", async () => {
