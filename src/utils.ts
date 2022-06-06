@@ -7,14 +7,15 @@ export async function withTimeout<T>(
   const callbackAbortController = new AbortController()
   const timeoutAbortController = new AbortController()
 
-  return await Promise.race([
-    callback(callbackAbortController).then((result) => {
-      timeoutAbortController.abort()
-      return result
-    }),
-    setTimeout(timeout, "Timeout", { signal: timeoutAbortController.signal }).then(() => {
+  const request = callback(callbackAbortController).finally(() => {
+    timeoutAbortController.abort()
+  })
+
+  setTimeout(timeout, "Timeout", { signal: timeoutAbortController.signal })
+    .then(() => {
       callbackAbortController.abort()
-      throw new Error("Query timed-out")
-    }),
-  ])
+    })
+    .catch(() => {})
+
+  return request
 }

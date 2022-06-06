@@ -9,8 +9,19 @@ import { SUBGRAPH_URL, test } from "./components"
 type Response = Awaited<ReturnType<IFetchComponent["fetch"]>>
 
 jest.mock("crypto")
+jest.mock("timers/promises")
 
 test("subraph component", function ({ components, stubComponents }) {
+  beforeEach(() => {
+    ;(setTimeout as jest.Mock).mockImplementation((_time: number, name: string) => {
+      if (name === "Timeout") {
+        return new Promise(() => {})
+      } else {
+        return Promise.resolve()
+      }
+    })
+  })
+
   afterEach(() => {
     jest.resetAllMocks()
   })
@@ -84,11 +95,7 @@ test("subraph component", function ({ components, stubComponents }) {
 
         it("should throw the appropiate error", async () => {
           const { subgraph } = components
-          try {
-            await subgraph.query("query", {}, 0) // no retires
-          } catch (error) {
-            expect(error.message).toBe(`Invalid request. Status: ${response.status}`)
-          }
+          await expect(subgraph.query("query", {}, 0)).rejects.toThrow(`Invalid request. Status: ${response.status}`)
         })
 
         it("should increment the metric", async () => {
@@ -185,11 +192,7 @@ test("subraph component", function ({ components, stubComponents }) {
         describe("and there's an empty errors prop", () => {
           it("should throw an Invalid Response error", async () => {
             const { subgraph } = components
-            try {
-              await subgraph.query("query", {}, 0) // no retires
-            } catch (error) {
-              expect(error.message).toBe("GraphQL Error: Invalid response")
-            }
+            await expect(subgraph.query("query", {}, 0)).rejects.toThrow("GraphQL Error: Invalid response")
           })
         })
 
@@ -202,11 +205,9 @@ test("subraph component", function ({ components, stubComponents }) {
 
           it("should throw them all", async () => {
             const { subgraph } = components
-            try {
-              await subgraph.query("query", {}, 0) // no retires
-            } catch (error) {
-              expect(error.message).toBe("There was a total of 2. GraphQL errors:\n- some error\n- happened")
-            }
+            await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+              "There was a total of 2. GraphQL errors:\n- some error\n- happened"
+            )
           })
         })
 
@@ -225,9 +226,9 @@ test("subraph component", function ({ components, stubComponents }) {
 
             try {
               await subgraph.query("query", {}, retries)
-            } catch (error) {
-              expect(fetchMock).toHaveBeenCalledTimes(retries + 1)
-            }
+            } catch (error) {}
+
+            expect(fetchMock).toHaveBeenCalledTimes(retries + 1)
           })
 
           it("should increment the metric each time", async () => {
@@ -269,48 +270,40 @@ test("subraph component", function ({ components, stubComponents }) {
           })
 
           it("should retry the supplied amount of times", async () => {
-            const { fetch } = components
-
-            fetchMock.mockReset()
-            fetchMock = jest.spyOn(fetch, "fetch").mockImplementation()
+            fetchMock.mockReset().mockImplementation()
 
             try {
               await subgraph.query("query")
-            } catch (error) {
-              expect(fetchMock).toHaveBeenCalledTimes(retries + 1)
-            }
+            } catch (error) {}
+
+            expect(fetchMock).toHaveBeenCalledTimes(retries + 1)
           })
         })
       })
 
       describe("when the timeout is reached", () => {
-        const timeout = 500
         let subgraph: ISubgraphComponent
 
-        beforeEach(async () => {
-          const { config, fetch } = components
-          jest.spyOn(config, "getNumber").mockImplementation(async (name: string) => {
-            switch (name) {
-              case "SUBGRAPH_COMPONENT_QUERY_TIMEOUT":
-                return timeout
-              case "SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT":
-                return 1
-              default:
-                return 0
-            }
-          })
+        const errorMessage = "Query timed out"
 
-          fetchMock = jest.spyOn(fetch, "fetch").mockImplementation(() => setTimeout(timeout + 1000))
+        beforeEach(async () => {
+          const { fetch } = components
+
+          let reject: Function
+          const fetchPromise = new Promise((_resolve, rej) => {
+            reject = rej
+          })
+          fetchMock = jest.spyOn(fetch, "fetch").mockImplementation(() => fetchPromise as any)
+          ;(setTimeout as jest.Mock).mockReset().mockImplementation(() => {
+            reject(new Error(errorMessage))
+            return Promise.resolve()
+          })
 
           subgraph = await createSubgraphComponent(components, SUBGRAPH_URL)
         })
 
         it("should throw the appropiate error", async () => {
-          try {
-            await subgraph.query("query")
-          } catch (error) {
-            expect(error.message).toBe("Query timed-out")
-          }
+          await expect(subgraph.query("query")).rejects.toThrow(errorMessage)
         })
 
         it("should increment the metric", async () => {
@@ -322,7 +315,7 @@ test("subraph component", function ({ components, stubComponents }) {
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
-            errorMessage: "Query timed-out",
+            errorMessage,
           })
         })
       })
