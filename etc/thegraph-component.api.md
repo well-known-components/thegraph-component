@@ -24,6 +24,12 @@ export namespace createSubgraphComponent {
 }
 
 // @public (undocumented)
+type Error_2 = {
+    message: string;
+};
+export { Error_2 as Error }
+
+// @public (undocumented)
 export interface ISubgraphComponent {
     query: <T>(query: string, variables?: Variables, remainingAttempts?: number) => Promise<T>;
 }
@@ -42,9 +48,7 @@ export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<strin
 // @public (undocumented)
 export type SubgraphResponse<T> = {
     data: T;
-    errors?: {
-        message: string;
-    }[];
+    errors?: Error_2[] | Error_2;
 };
 
 // @public (undocumented)
