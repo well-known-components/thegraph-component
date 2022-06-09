@@ -47,15 +47,15 @@ export async function createSubgraphComponent(
         timeoutWait
       )
 
-      const hasInvalidData = !data || Object.keys(data).length === 0
-      const hasMultipleErrors = errors && errors.length > 1
+      const hasErrors = errors !== undefined
+      if (hasErrors) {
+        const errorMessages = Array.isArray(errors) ? errors.map((error) => error.message) : [errors.message]
+        throw new Error(`GraphQL Error: Invalid response. Errors:\n- ${errorMessages.join("\n- ")}`)
+      }
 
-      if (hasInvalidData || hasMultipleErrors) {
-        throw new Error(
-          hasMultipleErrors
-            ? `There was a total of ${errors.length}. GraphQL errors:\n- ${errors.join("\n- ")}`
-            : "GraphQL Error: Invalid response"
-        )
+      const hasInvalidData = !data || Object.keys(data).length === 0
+      if (hasInvalidData) {
+        throw new Error("GraphQL Error: Invalid response.")
       }
 
       logger.info("Success:", logData)

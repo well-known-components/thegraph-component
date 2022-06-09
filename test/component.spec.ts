@@ -2,7 +2,7 @@ import { ILoggerComponent } from "@well-known-components/interfaces"
 import { IFetchComponent } from "@well-known-components/http-server"
 import { randomUUID } from "crypto"
 import { setTimeout } from "timers/promises"
-import { ISubgraphComponent } from "../src/types"
+import { ISubgraphComponent, SubgraphResponse } from "../src/types"
 import { createSubgraphComponent } from "../src"
 import { SUBGRAPH_URL, test } from "./components"
 
@@ -79,7 +79,7 @@ test("subraph component", function ({ components, stubComponents }) {
     })
 
     describe("when the request errors out", () => {
-      let errorResponseData: { errors: string[] }
+      let errorResponseData: SubgraphResponse<any>
 
       describe("and the server has an internal error", () => {
         beforeEach(() => {
@@ -162,10 +162,15 @@ test("subraph component", function ({ components, stubComponents }) {
       })
 
       describe("when the query is incorrect", () => {
+        const errorMessage = "No suitable indexer found for subgraph deployment"
+
         beforeEach(() => {
           const { fetch } = components
 
-          errorResponseData = { errors: [] }
+          errorResponseData = {
+            data: undefined,
+            errors: { message: errorMessage },
+          }
           response = {
             ok: true,
             status: 400,
@@ -185,28 +190,36 @@ test("subraph component", function ({ components, stubComponents }) {
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
-            errorMessage: "GraphQL Error: Invalid response",
+            errorMessage: `GraphQL Error: Invalid response. Errors:\n- ${errorMessage}`,
           })
         })
 
         describe("and there's an empty errors prop", () => {
+          beforeEach(() => {
+            errorResponseData = {
+              data: {},
+              errors: undefined,
+            }
+          })
+
           it("should throw an Invalid Response error", async () => {
             const { subgraph } = components
-            await expect(subgraph.query("query", {}, 0)).rejects.toThrow("GraphQL Error: Invalid response")
+            await expect(subgraph.query("query", {}, 0)).rejects.toThrow("GraphQL Error: Invalid response.")
           })
         })
 
         describe("and there's multiple errors", () => {
           beforeEach(() => {
             errorResponseData = {
-              errors: ["some error", "happened"],
+              data: undefined,
+              errors: [{ message: "some error" }, { message: "happened" }],
             }
           })
 
           it("should throw them all", async () => {
             const { subgraph } = components
             await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
-              "There was a total of 2. GraphQL errors:\n- some error\n- happened"
+              "GraphQL Error: Invalid response. Errors:\n- some error\n- happened"
             )
           })
         })
@@ -242,7 +255,7 @@ test("subraph component", function ({ components, stubComponents }) {
             expect(metrics.increment).toHaveBeenCalledTimes(retries + 1)
             expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
               url: SUBGRAPH_URL,
-              errorMessage: "GraphQL Error: Invalid response",
+              errorMessage: `GraphQL Error: Invalid response. Errors:\n- ${errorMessage}`,
             })
           })
         })
