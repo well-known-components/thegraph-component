@@ -60,6 +60,8 @@ export async function createSubgraphComponent(
 
       logger.debug("Success:", logData)
 
+      metrics.increment("subgraph_ok_total", { url })
+
       return data
     } catch (error) {
       const errorMessage = (error as Error).message
@@ -117,8 +119,13 @@ export namespace createSubgraphComponent {
  * @public
  */
 export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<string> = {
+  subgraph_ok_total: {
+    help: "Subgraph request counter",
+    type: IMetricsComponent.CounterType,
+    labelNames: ["url"],
+  },
   subgraph_errors_total: {
-    help: "Subgrpah error counter",
+    help: "Subgraph error counter",
     type: IMetricsComponent.CounterType,
     labelNames: ["url", "errorMessage"],
   },
