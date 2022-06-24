@@ -11,7 +11,7 @@ type Response = Awaited<ReturnType<IFetchComponent["fetch"]>>
 jest.mock("crypto")
 jest.mock("timers/promises")
 
-test("subraph component", function ({ components, stubComponents }) {
+test("subgraph component", function ({ components, stubComponents }) {
   beforeEach(() => {
     ;(setTimeout as jest.Mock).mockImplementation((_time: number, name: string) => {
       if (name === "Timeout") {
@@ -122,7 +122,7 @@ test("subraph component", function ({ components, stubComponents }) {
 
             logger = logs.getLogger("thegraph-port")
 
-            jest.spyOn(logger, "info")
+            jest.spyOn(logger, "debug")
             jest.spyOn(logs, "getLogger").mockImplementationOnce(() => logger)
             ;(randomUUID as jest.Mock).mockReturnValue(queryId)
 
@@ -152,11 +152,11 @@ test("subraph component", function ({ components, stubComponents }) {
               url: SUBGRAPH_URL,
             }
 
-            expect(logger.info).toHaveBeenCalledTimes(4)
-            expect(logger.info).toBeCalledWith("Querying:", logData)
-            expect(logger.info).toBeCalledWith("Querying:", { ...logData, currentAttempt: 2, timeoutWait: 2001 })
-            expect(logger.info).toBeCalledWith("Querying:", { ...logData, currentAttempt: 3, timeoutWait: 2002 })
-            expect(logger.info).toBeCalledWith("Querying:", { ...logData, currentAttempt: 4, timeoutWait: 2003 })
+            expect(logger.debug).toHaveBeenCalledTimes(4)
+            expect(logger.debug).toBeCalledWith("Querying:", logData)
+            expect(logger.debug).toBeCalledWith("Querying:", { ...logData, currentAttempt: 2, timeoutWait: 2001 })
+            expect(logger.debug).toBeCalledWith("Querying:", { ...logData, currentAttempt: 3, timeoutWait: 2002 })
+            expect(logger.debug).toBeCalledWith("Querying:", { ...logData, currentAttempt: 4, timeoutWait: 2003 })
           })
         })
       })
