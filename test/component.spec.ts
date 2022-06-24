@@ -58,9 +58,14 @@ test("subgraph component", function ({ components, stubComponents }) {
 
       it("should return the response data's data property", async () => {
         const { subgraph } = components
+        const { metrics } = stubComponents
+
         const result = await subgraph.query("query")
 
         expect(result).toEqual(okResponseData.data)
+        expect(metrics.increment).toHaveBeenCalledWith("subgraph_ok_total", {
+          url: SUBGRAPH_URL,
+        })
       })
 
       it("should forward the variables and query to fetch the subgraph", async () => {
