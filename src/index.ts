@@ -39,7 +39,7 @@ export async function createSubgraphComponent(
     const queryId = randomUUID()
     const logData = { queryId, currentAttempt, attempts, timeoutWait, url }
 
-    logger.info("Querying:", logData)
+    logger.debug("Querying:", logData)
 
     try {
       const { data, errors } = await withTimeout(
@@ -58,7 +58,9 @@ export async function createSubgraphComponent(
         )
       }
 
-      logger.info("Success:", logData)
+      logger.debug("Success:", logData)
+
+      metrics.increment("subgraph_ok_total", { url })
 
       return data
     } catch (error) {
@@ -117,8 +119,13 @@ export namespace createSubgraphComponent {
  * @public
  */
 export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<string> = {
+  subgraph_ok_total: {
+    help: "Subgraph request counter",
+    type: IMetricsComponent.CounterType,
+    labelNames: ["url"],
+  },
   subgraph_errors_total: {
-    help: "Subgrpah error counter",
+    help: "Subgraph error counter",
     type: IMetricsComponent.CounterType,
     labelNames: ["url", "errorMessage"],
   },
