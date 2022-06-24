@@ -39,7 +39,7 @@ export async function createSubgraphComponent(
     const queryId = randomUUID()
     const logData = { queryId, currentAttempt, attempts, timeoutWait, url }
 
-    logger.info("Querying:", logData)
+    logger.debug("Querying:", logData)
 
     try {
       const { data, errors } = await withTimeout(
@@ -58,7 +58,7 @@ export async function createSubgraphComponent(
         )
       }
 
-      logger.info("Success:", logData)
+      logger.debug("Success:", logData)
 
       return data
     } catch (error) {
