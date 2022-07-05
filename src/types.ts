@@ -6,7 +6,12 @@ export type Variables = Record<string, string[] | string | number | boolean | un
 /**
  * @public
  */
-export type SubgraphResponse<T> = { data: T; errors?: { message: string }[] }
+export type Error = { message: string }
+
+/**
+ * @public
+ */
+export type SubgraphResponse<T> = { data: T; errors?: Error[] | Error }
 
 /**
  * @public
