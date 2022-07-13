@@ -26,7 +26,7 @@
   "devDependencies": {
     "@microsoft/api-extractor": "^7.23.2",
     "@types/jest": "^27.0.1",
-    "@types/node": "^17.0.31",
+    "@types/node": "^18.0.4",
     "@well-known-components/env-config-provider": "^1.1.1",
     "@well-known-components/logger": "^1.1.0",
     "@well-known-components/metrics": "^1.1.3",
