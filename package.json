@@ -28,7 +28,7 @@
     "@types/jest": "^27.0.1",
     "@types/node": "^18.0.6",
     "@well-known-components/env-config-provider": "^1.1.1",
-    "@well-known-components/logger": "^2.1.0",
+    "@well-known-components/logger": "^3.0.0",
     "@well-known-components/metrics": "^1.1.3",
     "@well-known-components/test-helpers": "^1.2.0",
     "jest": "^27.0.6",
