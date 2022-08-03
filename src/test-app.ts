@@ -38,9 +38,9 @@ Lifecycle.run({
           }
         }
       `, {
-        block: 31452324,
+        block: 31452893,
         urnList: ["urn:decentraland:matic:collections-v2:0x7e553ede9b6ad437262d28d4fe9ab77e63089b8a:3", "urn:decentraland:matic:collections-v2:0x84a1d84f183fa0fd9b6b9cb1ed0ff1b7f5409ebb:10"],
-        ethAddress: "0x93ceab7c9add37523bf146d1489b9a1501bbcb2e"
+        ethAddress: "0x8f20c5acaf44ec084cb1936d116601d99d2e8704"
       })
     )
 

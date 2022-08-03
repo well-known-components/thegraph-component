@@ -9,7 +9,8 @@ test:
 test-watch:
 	node_modules/.bin/jest --detectOpenHandles --colors --runInBand --watch --coverage $(TESTARGS)
 
-test-app: build
+test-app:
+	./node_modules/.bin/tsc -p tsconfig.json
 	node dist/test-app.js
 
 build:
