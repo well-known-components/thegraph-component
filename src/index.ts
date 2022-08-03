@@ -58,7 +58,7 @@ export async function createSubgraphComponent(
       const hasInvalidData = !data || Object.keys(data).length === 0
       if (hasInvalidData) {
         logger.error("Invalid response", { query, variables, response } as any)
-        throw new Error("GraphQL Error: Invalid response (" + JSON.stringify({ response, query, variables }) + ").")
+        throw new Error("GraphQL Error: Invalid response.")
       }
 
       logger.debug("Success:", logData)
