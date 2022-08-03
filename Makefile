@@ -9,6 +9,9 @@ test:
 test-watch:
 	node_modules/.bin/jest --detectOpenHandles --colors --runInBand --watch --coverage $(TESTARGS)
 
+test-app: build
+	node dist/test-app.js
+
 build:
 	./node_modules/.bin/tsc -p tsconfig.json
 	rm -rf node_modules/@microsoft/api-extractor/node_modules/typescript || true
