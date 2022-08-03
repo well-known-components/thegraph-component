@@ -42,10 +42,12 @@ export async function createSubgraphComponent(
     logger.debug("Querying:", logData)
 
     try {
-      const { data, errors } = await withTimeout(
+      const response = await withTimeout(
         (abortController) => postQuery<T>(query, variables, abortController),
         timeoutWait
       )
+
+      const { data, errors } = response
 
       const hasErrors = errors !== undefined
       if (hasErrors) {
@@ -55,6 +57,7 @@ export async function createSubgraphComponent(
 
       const hasInvalidData = !data || Object.keys(data).length === 0
       if (hasInvalidData) {
+        logger.error("Invalid response", { query, variables, response } as any)
         throw new Error("GraphQL Error: Invalid response.")
       }
 
