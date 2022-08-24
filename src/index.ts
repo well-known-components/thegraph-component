@@ -69,7 +69,7 @@ export async function createSubgraphComponent(
     } catch (error) {
       const errorMessage = (error as Error).message
 
-      logger.error("Error:", { ...logData, errorMessage })
+      logger.error("Error:", { ...logData, errorMessage, query, variables: JSON.stringify(variables) })
       metrics.increment("subgraph_errors_total", { url, errorMessage })
 
       if (remainingAttempts > 0) {
