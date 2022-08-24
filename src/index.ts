@@ -70,7 +70,7 @@ export async function createSubgraphComponent(
       const errorMessage = (error as Error).message
 
       logger.error("Error:", { ...logData, errorMessage })
-      metrics.increment("subgraph_errors_total", { url, errorMessage })
+      metrics.increment("subgraph_errors_total", { url, errorMessage, query, variables: JSON.stringify(variables) })
 
       if (remainingAttempts > 0) {
         await setTimeout(BACKOFF)
@@ -130,6 +130,6 @@ export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<strin
   subgraph_errors_total: {
     help: "Subgraph error counter",
     type: IMetricsComponent.CounterType,
-    labelNames: ["url", "errorMessage"],
+    labelNames: ["url", "errorMessage", "query", "vars"],
   },
 }

@@ -114,6 +114,8 @@ test("subgraph component", function ({ components, stubComponents }) {
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
             errorMessage: `Invalid request. Status: ${response.status}`,
+            query: "query",
+            variables: "{}"
           })
         })
 
@@ -196,6 +198,8 @@ test("subgraph component", function ({ components, stubComponents }) {
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
             errorMessage: `GraphQL Error: Invalid response. Errors:\n- ${errorMessage}`,
+            query: "query",
+            variables: "{}"
           })
         })
 
@@ -261,6 +265,8 @@ test("subgraph component", function ({ components, stubComponents }) {
             expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
               url: SUBGRAPH_URL,
               errorMessage: `GraphQL Error: Invalid response. Errors:\n- ${errorMessage}`,
+              query: "query",
+              variables: "{}"
             })
           })
         })
@@ -334,6 +340,8 @@ test("subgraph component", function ({ components, stubComponents }) {
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
             errorMessage,
+            query: "query",
+            variables: "{}"
           })
         })
       })
