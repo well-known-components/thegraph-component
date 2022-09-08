@@ -29,7 +29,7 @@
     "@types/node": "^18.0.6",
     "@well-known-components/env-config-provider": "^1.1.2-20220801195549.commit-101c273",
     "@well-known-components/logger": "^3.0.0",
-    "@well-known-components/metrics": "^1.1.3",
+    "@well-known-components/metrics": "^2.0.0",
     "@well-known-components/test-helpers": "^1.2.0",
     "jest": "^27.0.6",
     "ts-jest": "^27.0.5",
