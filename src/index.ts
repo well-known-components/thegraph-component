@@ -39,8 +39,6 @@ export async function createSubgraphComponent(
     const queryId = randomUUID()
     const logData = { queryId, currentAttempt, attempts, timeoutWait, url }
 
-    logger.debug("Querying:", logData)
-
     try {
       const response = await withTimeout(
         (abortController) => postQuery<T>(query, variables, abortController),
@@ -60,8 +58,6 @@ export async function createSubgraphComponent(
         logger.error("Invalid response", { query, variables, response } as any)
         throw new Error("GraphQL Error: Invalid response.")
       }
-
-      logger.debug("Success:", logData)
 
       metrics.increment("subgraph_ok_total", { url })
 

@@ -143,26 +143,6 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             expect(logs.getLogger).toBeCalledWith("thegraph-port")
           })
-
-          it("should append the correct verb to the log", async () => {
-            try {
-              await subgraph.query("query", {}, 3)
-            } catch (error) {}
-
-            const logData = {
-              queryId,
-              currentAttempt: 1,
-              attempts: 4,
-              timeoutWait: 2000,
-              url: SUBGRAPH_URL,
-            }
-
-            expect(logger.debug).toHaveBeenCalledTimes(4)
-            expect(logger.debug).toBeCalledWith("Querying:", logData)
-            expect(logger.debug).toBeCalledWith("Querying:", { ...logData, currentAttempt: 2, timeoutWait: 2001 })
-            expect(logger.debug).toBeCalledWith("Querying:", { ...logData, currentAttempt: 3, timeoutWait: 2002 })
-            expect(logger.debug).toBeCalledWith("Querying:", { ...logData, currentAttempt: 4, timeoutWait: 2003 })
-          })
         })
       })
 
