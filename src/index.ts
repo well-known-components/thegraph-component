@@ -21,10 +21,10 @@ export async function createSubgraphComponent(
 
   const logger = logs.getLogger("thegraph-port")
 
-  const RETRIES = (await config.getNumber("SUBGRAPH_COMPONENT_RETRIES")) || 3
-  const TIMEOUT = (await config.getNumber("SUBGRAPH_COMPONENT_QUERY_TIMEOUT")) || 10000
-  const TIMEOUT_INCREMENT = (await config.getNumber("SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT")) || 10000
-  const BACKOFF = (await config.getNumber("SUBGRAPH_COMPONENT_BACKOFF")) || 500
+  const RETRIES = (await config.getNumber("SUBGRAPH_COMPONENT_RETRIES")) ?? 3
+  const TIMEOUT = (await config.getNumber("SUBGRAPH_COMPONENT_QUERY_TIMEOUT")) ?? 10000
+  const TIMEOUT_INCREMENT = (await config.getNumber("SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT")) ?? 10000
+  const BACKOFF = (await config.getNumber("SUBGRAPH_COMPONENT_BACKOFF")) ?? 500
 
   async function executeQuery<T>(
     query: string,
