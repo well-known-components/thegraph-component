@@ -2,7 +2,7 @@ import { ILoggerComponent } from "@well-known-components/interfaces"
 import { IFetchComponent } from "@well-known-components/http-server"
 import { randomUUID } from "crypto"
 import { setTimeout } from "timers/promises"
-import { ISubgraphComponent, SubgraphResponse } from "../src/types"
+import { ISubgraphComponent, SubgraphResponse, Variables } from "../src/types"
 import { createSubgraphComponent } from "../src"
 import { SUBGRAPH_URL, test } from "./components"
 
@@ -29,6 +29,8 @@ test("subgraph component", function ({ components, stubComponents }) {
   describe("when querying a subgraph", () => {
     let fetchMock: jest.SpyInstance
     let response: Response
+    const query = "query ThisIsAQuery() {}"
+    let variables: Variables
 
     beforeEach(() => {
       const { metrics } = stubComponents
@@ -52,6 +54,7 @@ test("subgraph component", function ({ components, stubComponents }) {
           status: 200,
           json: async () => okResponseData,
         } as Response
+        variables = { some: "very interesting", variables: ["we have", "here"] }
 
         fetchMock = jest.spyOn(fetch, "fetch").mockImplementationOnce(async () => response)
       })
@@ -70,15 +73,55 @@ test("subgraph component", function ({ components, stubComponents }) {
 
       it("should forward the variables and query to fetch the subgraph", async () => {
         const { subgraph } = components
-        const query = "query ThisIsAQuery() {}"
-        const variables = { some: "very interesting", variables: ["we have", "here"] }
         await subgraph.query(query, variables)
 
         expect(fetchMock).toHaveBeenCalledWith(SUBGRAPH_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "User-agent": "Subgraph component / Unknown sender" },
           body: JSON.stringify({ query, variables }),
           signal: expect.any(AbortSignal),
+        })
+      })
+
+      describe("and the agent name is provided", () => {
+        let subgraph: ISubgraphComponent
+
+        beforeEach(async () => {
+          const { config } = components
+          jest.spyOn(config, "getString").mockImplementation(async (name: string) => {
+            switch (name) {
+              case "SUBGRAPH_COMPONENT_AGENT_NAME":
+                return "An agent"
+              default:
+                return ""
+            }
+          })
+          subgraph = await createSubgraphComponent(components, SUBGRAPH_URL)
+        })
+
+        it("should perform the fetch to the subgraph with the provided user agent", async () => {
+          await subgraph.query(query, variables)
+
+          expect(fetchMock).toHaveBeenCalledWith(SUBGRAPH_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "User-agent": "Subgraph component / An agent" },
+            body: JSON.stringify({ query, variables }),
+            signal: expect.any(AbortSignal),
+          })
+        })
+      })
+
+      describe("and the agent name is not provided", () => {
+        it("should perform the fetch to the subgraph with the provided user agent", async () => {
+          const { subgraph } = components
+          await subgraph.query(query, variables)
+
+          expect(fetchMock).toHaveBeenCalledWith(SUBGRAPH_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "User-agent": "Subgraph component / Unknown sender" },
+            body: JSON.stringify({ query, variables }),
+            signal: expect.any(AbortSignal),
+          })
         })
       })
     })
