@@ -25,6 +25,9 @@ export async function createSubgraphComponent(
   const TIMEOUT = (await config.getNumber("SUBGRAPH_COMPONENT_QUERY_TIMEOUT")) ?? 10000
   const TIMEOUT_INCREMENT = (await config.getNumber("SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT")) ?? 10000
   const BACKOFF = (await config.getNumber("SUBGRAPH_COMPONENT_BACKOFF")) ?? 500
+  const USER_AGENT = `Subgraph component / ${
+    (await config.getString("SUBGRAPH_COMPONENT_AGENT_NAME")) ?? "Unknown sender"
+  }`
 
   async function executeQuery<T>(
     query: string,
@@ -84,7 +87,7 @@ export async function createSubgraphComponent(
   ): Promise<SubgraphResponse<T>> {
     const response = await fetch.fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "User-agent": USER_AGENT },
       body: JSON.stringify({ query, variables }),
       signal: abortController.signal,
     })
