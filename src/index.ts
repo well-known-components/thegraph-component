@@ -69,7 +69,7 @@ export async function createSubgraphComponent(
       const errorMessage = (error as Error).message
 
       logger.error("Error:", { ...logData, errorMessage, query, variables: JSON.stringify(variables) })
-      metrics.increment("subgraph_errors_total", { url, errorMessage })
+      metrics.increment("subgraph_errors_total", { url })
 
       if (remainingAttempts > 0) {
         await setTimeout(BACKOFF)
