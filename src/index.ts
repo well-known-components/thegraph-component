@@ -1,5 +1,4 @@
-import { IFetchComponent } from "@well-known-components/http-server"
-import { IConfigComponent, ILoggerComponent, IMetricsComponent } from "@well-known-components/interfaces"
+import { IConfigComponent, IFetchComponent, ILoggerComponent, IMetricsComponent } from "@well-known-components/interfaces"
 import { randomUUID } from "crypto"
 import { setTimeout } from "timers/promises"
 import { ISubgraphComponent, SubgraphResponse, Variables } from "./types"

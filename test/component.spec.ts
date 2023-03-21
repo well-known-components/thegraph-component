@@ -1,8 +1,7 @@
-import { ILoggerComponent } from "@well-known-components/interfaces"
-import { IFetchComponent } from "@well-known-components/http-server"
+import { IFetchComponent, ILoggerComponent } from "@well-known-components/interfaces"
 import { randomUUID } from "crypto"
 import { setTimeout } from "timers/promises"
-import { ISubgraphComponent, SubgraphResponse, Variables } from "../src/types"
+import { ISubgraphComponent, SubgraphResponse, Variables } from "../src"
 import { createSubgraphComponent } from "../src"
 import { SUBGRAPH_URL, test } from "./components"
 
