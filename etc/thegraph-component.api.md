@@ -5,7 +5,7 @@
 ```ts
 
 import { IConfigComponent } from '@well-known-components/interfaces';
-import { IFetchComponent } from '@well-known-components/http-server';
+import { IFetchComponent } from '@well-known-components/interfaces';
 import { ILoggerComponent } from '@well-known-components/interfaces';
 import { IMetricsComponent } from '@well-known-components/interfaces';
 

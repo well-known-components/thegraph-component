@@ -1,6 +1,5 @@
-import { Lifecycle } from "@well-known-components/interfaces"
+import { IFetchComponent, Lifecycle } from "@well-known-components/interfaces"
 import { createConfigComponent } from "@well-known-components/env-config-provider"
-import { IFetchComponent } from "@well-known-components/http-server"
 import { createLogComponent } from "@well-known-components/logger"
 import { createMetricsComponent } from "@well-known-components/metrics"
 import { createSubgraphComponent, metricDeclarations } from "./index"
