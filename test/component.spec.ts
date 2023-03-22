@@ -3,6 +3,7 @@ import { randomUUID } from "crypto"
 import { setTimeout } from "timers/promises"
 import { ISubgraphComponent, SubgraphResponse, Variables } from "../src"
 import { createSubgraphComponent } from "../src"
+import { UNKNOWN_SUBGRAPH_PROVIDER } from "../src/utils"
 import { SUBGRAPH_URL, test } from "./components"
 
 type Response = Awaited<ReturnType<IFetchComponent["fetch"]>>
@@ -146,7 +147,9 @@ test("subgraph component", function ({ components, stubComponents }) {
 
         it("should throw the appropiate error", async () => {
           const { subgraph } = components
-          await expect(subgraph.query("query", {}, 0)).rejects.toThrow(`Invalid request. Status: ${response.status}`)
+          await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+            `Invalid request. Status: ${response.status}. Provider: ${UNKNOWN_SUBGRAPH_PROVIDER}`
+          )
         })
 
         it("should increment the metric", async () => {
@@ -234,7 +237,9 @@ test("subgraph component", function ({ components, stubComponents }) {
 
           it("should throw an Invalid Response error", async () => {
             const { subgraph } = components
-            await expect(subgraph.query("query", {}, 0)).rejects.toThrow("GraphQL Error: Invalid response.")
+            await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+              `GraphQL Error: Invalid response. Provider: ${UNKNOWN_SUBGRAPH_PROVIDER}`
+            )
           })
         })
 
@@ -249,7 +254,7 @@ test("subgraph component", function ({ components, stubComponents }) {
           it("should throw them all", async () => {
             const { subgraph } = components
             await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
-              "GraphQL Error: Invalid response. Errors:\n- some error\n- happened"
+              `GraphQL Error: Invalid response. Errors:\n- some error\n- happened. Provider: ${UNKNOWN_SUBGRAPH_PROVIDER}`
             )
           })
         })
