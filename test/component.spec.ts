@@ -48,11 +48,14 @@ test("subgraph component", function ({ components, stubComponents }) {
             someOther: "data",
           },
         }
+
         response = {
           ok: true,
           status: 200,
           json: async () => okResponseData,
-        } as Response
+          headers: new Map(),
+        } as unknown as Response
+
         variables = { some: "very interesting", variables: ["we have", "here"] }
 
         fetchMock = jest.spyOn(fetch, "fetch").mockImplementationOnce(async () => response)
@@ -135,7 +138,8 @@ test("subgraph component", function ({ components, stubComponents }) {
           response = {
             ok: false,
             status: 500,
-          } as Response
+            headers: new Map(),
+          } as unknown as Response
 
           fetchMock = jest.spyOn(fetch, "fetch").mockImplementationOnce(async () => response)
         })
@@ -154,7 +158,7 @@ test("subgraph component", function ({ components, stubComponents }) {
           } catch (error) {}
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
-            url: SUBGRAPH_URL
+            url: SUBGRAPH_URL,
           })
         })
 
@@ -201,7 +205,8 @@ test("subgraph component", function ({ components, stubComponents }) {
             ok: true,
             status: 400,
             json: async () => errorResponseData,
-          } as Response
+            headers: new Map(),
+          } as unknown as Response
 
           fetchMock = jest.spyOn(fetch, "fetch").mockImplementationOnce(async () => response)
         })
@@ -215,7 +220,7 @@ test("subgraph component", function ({ components, stubComponents }) {
           } catch (error) {}
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
-            url: SUBGRAPH_URL
+            url: SUBGRAPH_URL,
           })
         })
 
@@ -279,7 +284,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             expect(metrics.increment).toHaveBeenCalledTimes(retries + 1)
             expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
-              url: SUBGRAPH_URL
+              url: SUBGRAPH_URL,
             })
           })
         })
@@ -351,7 +356,7 @@ test("subgraph component", function ({ components, stubComponents }) {
           } catch (error) {}
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
-            url: SUBGRAPH_URL
+            url: SUBGRAPH_URL,
           })
         })
       })
