@@ -1,8 +1,13 @@
-import { IConfigComponent, IFetchComponent, ILoggerComponent, IMetricsComponent } from "@well-known-components/interfaces"
+import {
+  IConfigComponent,
+  IFetchComponent,
+  ILoggerComponent,
+  IMetricsComponent,
+} from "@well-known-components/interfaces"
 import { randomUUID } from "crypto"
 import { setTimeout } from "timers/promises"
-import { ISubgraphComponent, SubgraphResponse, Variables } from "./types"
-import { withTimeout } from "./utils"
+import { ISubgraphComponent, PostQueryResponse, SubgraphProvider, SubgraphResponse, Variables } from "./types"
+import { UNKNOWN_SUBGRAPH_PROVIDER, withTimeout } from "./utils"
 
 export * from "./types"
 
@@ -42,7 +47,7 @@ export async function createSubgraphComponent(
     const logData = { queryId, currentAttempt, attempts, timeoutWait, url }
 
     try {
-      const response = await withTimeout(
+      const [provider, response] = await withTimeout(
         (abortController) => postQuery<T>(query, variables, abortController),
         timeoutWait
       )
@@ -52,13 +57,15 @@ export async function createSubgraphComponent(
       const hasErrors = errors !== undefined
       if (hasErrors) {
         const errorMessages = Array.isArray(errors) ? errors.map((error) => error.message) : [errors.message]
-        throw new Error(`GraphQL Error: Invalid response. Errors:\n- ${errorMessages.join("\n- ")}`)
+        throw new Error(
+          `GraphQL Error: Invalid response. Errors:\n- ${errorMessages.join("\n- ")}. Provider: ${provider}`
+        )
       }
 
       const hasInvalidData = !data || Object.keys(data).length === 0
       if (hasInvalidData) {
         logger.error("Invalid response", { query, variables, response } as any)
-        throw new Error("GraphQL Error: Invalid response.")
+        throw new Error(`GraphQL Error: Invalid response. Provider: ${provider}`)
       }
 
       metrics.increment("subgraph_ok_total", { url })
@@ -83,7 +90,7 @@ export async function createSubgraphComponent(
     query: string,
     variables: Variables,
     abortController: AbortController
-  ): Promise<SubgraphResponse<T>> {
+  ): Promise<PostQueryResponse<T>> {
     const response = await fetch.fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", "User-agent": USER_AGENT },
@@ -91,11 +98,13 @@ export async function createSubgraphComponent(
       signal: abortController.signal,
     })
 
+    const provider = response.headers.get("X-Subgraph-Provider") ?? UNKNOWN_SUBGRAPH_PROVIDER
+
     if (!response.ok) {
-      throw new Error(`Invalid request. Status: ${response.status}`)
+      throw new Error(`Invalid request. Status: ${response.status}. Provider: ${provider}.`)
     }
 
-    return (await response.json()) as SubgraphResponse<T>
+    return [provider, (await response.json()) as SubgraphResponse<T>]
   }
 
   return {
