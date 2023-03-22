@@ -165,6 +165,20 @@ test("subgraph component", function ({ components, stubComponents }) {
           })
         })
 
+        describe("and the response has a subgraph provider header", () => {
+          beforeEach(() => {
+            response.headers.set("X-Subgraph-Provider", "SubgraphProvider")
+          })
+
+          it("should have the subgraph provider in the error message", async () => {
+            const { subgraph } = components
+
+            await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+              `Invalid request. Status: ${response.status}. Provider: SubgraphProvider`
+            )
+          })
+        })
+
         describe("and data is logged", () => {
           const queryId = "2b37f834-9c39-4eb3-b716-8e7b3a3f6b3c"
           let logger: ILoggerComponent.ILogger
@@ -241,6 +255,20 @@ test("subgraph component", function ({ components, stubComponents }) {
               `GraphQL Error: Invalid response. Provider: ${UNKNOWN_SUBGRAPH_PROVIDER}`
             )
           })
+
+          describe("and the response has a subgraph provider header", () => {
+            beforeEach(() => {
+              response.headers.set("X-Subgraph-Provider", "SubgraphProvider")
+            })
+
+            it("should have the subgraph provider in the error message", async () => {
+              const { subgraph } = components
+
+              await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+                `GraphQL Error: Invalid response. Provider: SubgraphProvider`
+              )
+            })
+          })
         })
 
         describe("and there's multiple errors", () => {
@@ -256,6 +284,20 @@ test("subgraph component", function ({ components, stubComponents }) {
             await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
               `GraphQL Error: Invalid response. Errors:\n- some error\n- happened. Provider: ${UNKNOWN_SUBGRAPH_PROVIDER}`
             )
+          })
+
+          describe("and the response has a subgraph provider header", () => {
+            beforeEach(() => {
+              response.headers.set("X-Subgraph-Provider", "SubgraphProvider")
+            })
+
+            it("should have the subgraph provider in the error message", async () => {
+              const { subgraph } = components
+
+              await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+                `GraphQL Error: Invalid response. Errors:\n- some error\n- happened. Provider: SubgraphProvider`
+              )
+            })
           })
         })
 
