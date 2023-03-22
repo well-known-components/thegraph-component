@@ -1,4 +1,7 @@
 import { setTimeout } from "timers/promises"
+import { SubgraphProvider } from "./types"
+
+export const UNKNOWN_SUBGRAPH_PROVIDER: SubgraphProvider = "UNKNOWN"
 
 export async function withTimeout<T>(
   callback: (abortController: AbortController) => Promise<T>,

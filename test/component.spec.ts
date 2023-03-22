@@ -3,6 +3,7 @@ import { randomUUID } from "crypto"
 import { setTimeout } from "timers/promises"
 import { ISubgraphComponent, SubgraphResponse, Variables } from "../src"
 import { createSubgraphComponent } from "../src"
+import { UNKNOWN_SUBGRAPH_PROVIDER } from "../src/utils"
 import { SUBGRAPH_URL, test } from "./components"
 
 type Response = Awaited<ReturnType<IFetchComponent["fetch"]>>
@@ -48,11 +49,14 @@ test("subgraph component", function ({ components, stubComponents }) {
             someOther: "data",
           },
         }
+
         response = {
           ok: true,
           status: 200,
           json: async () => okResponseData,
-        } as Response
+          headers: new Map(),
+        } as unknown as Response
+
         variables = { some: "very interesting", variables: ["we have", "here"] }
 
         fetchMock = jest.spyOn(fetch, "fetch").mockImplementationOnce(async () => response)
@@ -135,14 +139,17 @@ test("subgraph component", function ({ components, stubComponents }) {
           response = {
             ok: false,
             status: 500,
-          } as Response
+            headers: new Map(),
+          } as unknown as Response
 
           fetchMock = jest.spyOn(fetch, "fetch").mockImplementationOnce(async () => response)
         })
 
         it("should throw the appropiate error", async () => {
           const { subgraph } = components
-          await expect(subgraph.query("query", {}, 0)).rejects.toThrow(`Invalid request. Status: ${response.status}`)
+          await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+            `Invalid request. Status: ${response.status}. Provider: ${UNKNOWN_SUBGRAPH_PROVIDER}`
+          )
         })
 
         it("should increment the metric", async () => {
@@ -154,7 +161,21 @@ test("subgraph component", function ({ components, stubComponents }) {
           } catch (error) {}
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
-            url: SUBGRAPH_URL
+            url: SUBGRAPH_URL,
+          })
+        })
+
+        describe("and the response has a subgraph provider header", () => {
+          beforeEach(() => {
+            response.headers.set("X-Subgraph-Provider", "SubgraphProvider")
+          })
+
+          it("should have the subgraph provider in the error message", async () => {
+            const { subgraph } = components
+
+            await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+              `Invalid request. Status: ${response.status}. Provider: SubgraphProvider`
+            )
           })
         })
 
@@ -201,7 +222,8 @@ test("subgraph component", function ({ components, stubComponents }) {
             ok: true,
             status: 400,
             json: async () => errorResponseData,
-          } as Response
+            headers: new Map(),
+          } as unknown as Response
 
           fetchMock = jest.spyOn(fetch, "fetch").mockImplementationOnce(async () => response)
         })
@@ -215,7 +237,7 @@ test("subgraph component", function ({ components, stubComponents }) {
           } catch (error) {}
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
-            url: SUBGRAPH_URL
+            url: SUBGRAPH_URL,
           })
         })
 
@@ -229,7 +251,23 @@ test("subgraph component", function ({ components, stubComponents }) {
 
           it("should throw an Invalid Response error", async () => {
             const { subgraph } = components
-            await expect(subgraph.query("query", {}, 0)).rejects.toThrow("GraphQL Error: Invalid response.")
+            await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+              `GraphQL Error: Invalid response. Provider: ${UNKNOWN_SUBGRAPH_PROVIDER}`
+            )
+          })
+
+          describe("and the response has a subgraph provider header", () => {
+            beforeEach(() => {
+              response.headers.set("X-Subgraph-Provider", "SubgraphProvider")
+            })
+
+            it("should have the subgraph provider in the error message", async () => {
+              const { subgraph } = components
+
+              await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+                `GraphQL Error: Invalid response. Provider: SubgraphProvider`
+              )
+            })
           })
         })
 
@@ -244,8 +282,22 @@ test("subgraph component", function ({ components, stubComponents }) {
           it("should throw them all", async () => {
             const { subgraph } = components
             await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
-              "GraphQL Error: Invalid response. Errors:\n- some error\n- happened"
+              `GraphQL Error: Invalid response. Errors:\n- some error\n- happened. Provider: ${UNKNOWN_SUBGRAPH_PROVIDER}`
             )
+          })
+
+          describe("and the response has a subgraph provider header", () => {
+            beforeEach(() => {
+              response.headers.set("X-Subgraph-Provider", "SubgraphProvider")
+            })
+
+            it("should have the subgraph provider in the error message", async () => {
+              const { subgraph } = components
+
+              await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+                `GraphQL Error: Invalid response. Errors:\n- some error\n- happened. Provider: SubgraphProvider`
+              )
+            })
           })
         })
 
@@ -279,7 +331,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             expect(metrics.increment).toHaveBeenCalledTimes(retries + 1)
             expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
-              url: SUBGRAPH_URL
+              url: SUBGRAPH_URL,
             })
           })
         })
@@ -351,7 +403,7 @@ test("subgraph component", function ({ components, stubComponents }) {
           } catch (error) {}
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
-            url: SUBGRAPH_URL
+            url: SUBGRAPH_URL,
           })
         })
       })

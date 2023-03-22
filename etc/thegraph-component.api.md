@@ -46,6 +46,12 @@ export namespace ISubgraphComponent {
 export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<string>;
 
 // @public (undocumented)
+export type PostQueryResponse<T> = [SubgraphProvider, SubgraphResponse<T>];
+
+// @public (undocumented)
+export type SubgraphProvider = string;
+
+// @public (undocumented)
 export type SubgraphResponse<T> = {
     data: T;
     errors?: Error_2[] | Error_2;
