@@ -6,7 +6,7 @@ import {
 } from "@well-known-components/interfaces"
 import { randomUUID } from "crypto"
 import { setTimeout } from "timers/promises"
-import { ISubgraphComponent, PostQueryResponse, SubgraphProvider, SubgraphResponse, Variables } from "./types"
+import { ISubgraphComponent, PostQueryResponse, SubgraphResponse, Variables } from "./types"
 import { UNKNOWN_SUBGRAPH_PROVIDER, withTimeout } from "./utils"
 
 export * from "./types"
@@ -29,9 +29,8 @@ export async function createSubgraphComponent(
   const TIMEOUT = (await config.getNumber("SUBGRAPH_COMPONENT_QUERY_TIMEOUT")) ?? 10000
   const TIMEOUT_INCREMENT = (await config.getNumber("SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT")) ?? 10000
   const BACKOFF = (await config.getNumber("SUBGRAPH_COMPONENT_BACKOFF")) ?? 500
-  const USER_AGENT = `Subgraph component / ${
-    (await config.getString("SUBGRAPH_COMPONENT_AGENT_NAME")) ?? "Unknown sender"
-  }`
+  const USER_AGENT = `Subgraph component / ${(await config.getString("SUBGRAPH_COMPONENT_AGENT_NAME")) ?? "Unknown sender"
+    }`
 
   async function executeQuery<T>(
     query: string,
@@ -46,6 +45,7 @@ export async function createSubgraphComponent(
     const queryId = randomUUID()
     const logData = { queryId, currentAttempt, attempts, timeoutWait, url }
 
+    const { end } = metrics.startTimer('subgraph_query_duration_seconds', { url })
     try {
       const [provider, response] = await withTimeout(
         (abortController) => postQuery<T>(query, variables, abortController),
@@ -83,6 +83,8 @@ export async function createSubgraphComponent(
       } else {
         throw error // bubble up
       }
+    } finally {
+      end({ url })
     }
   }
 
@@ -137,6 +139,11 @@ export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<strin
   subgraph_errors_total: {
     help: "Subgraph error counter",
     type: IMetricsComponent.CounterType,
-    labelNames: ["url", "errorMessage"],
+    labelNames: ["url"],
+  },
+  subgraph_query_duration_seconds: {
+    type: IMetricsComponent.HistogramType,
+    help: "Request duration in seconds.",
+    labelNames: ["url"],
   },
 }
