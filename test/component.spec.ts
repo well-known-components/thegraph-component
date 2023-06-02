@@ -13,13 +13,14 @@ jest.mock("timers/promises")
 
 test("subgraph component", function ({ components, stubComponents }) {
   beforeEach(() => {
-    ;(setTimeout as jest.Mock).mockImplementation((_time: number, name: string) => {
+    ; (setTimeout as jest.Mock).mockImplementation((_time: number, name: string) => {
       if (name === "Timeout") {
-        return new Promise(() => {})
+        return new Promise(() => { })
       } else {
         return Promise.resolve()
       }
     })
+    jest.spyOn(stubComponents.metrics, 'startTimer').mockReturnValue({ end: jest.fn() })
   })
 
   afterEach(() => {
@@ -158,7 +159,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
           try {
             await subgraph.query("query", {}, 0) // no retires
-          } catch (error) {}
+          } catch (error) { }
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
@@ -191,7 +192,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             jest.spyOn(logger, "debug")
             jest.spyOn(logs, "getLogger").mockImplementationOnce(() => logger)
-            ;(randomUUID as jest.Mock).mockReturnValue(queryId)
+              ; (randomUUID as jest.Mock).mockReturnValue(queryId)
 
             subgraph = await createSubgraphComponent(components, SUBGRAPH_URL)
           })
@@ -201,7 +202,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             try {
               await subgraph.query("query", {}, 0)
-            } catch (error) {}
+            } catch (error) { }
 
             expect(logs.getLogger).toBeCalledWith("thegraph-port")
           })
@@ -234,7 +235,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
           try {
             await subgraph.query("query", {}, 0) // no retires
-          } catch (error) {}
+          } catch (error) { }
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
@@ -316,7 +317,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             try {
               await subgraph.query("query", {}, retries)
-            } catch (error) {}
+            } catch (error) { }
 
             expect(fetchMock).toHaveBeenCalledTimes(retries + 1)
           })
@@ -327,7 +328,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             try {
               await subgraph.query("query", {}, retries)
-            } catch (error) {}
+            } catch (error) { }
 
             expect(metrics.increment).toHaveBeenCalledTimes(retries + 1)
             expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
@@ -363,7 +364,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             try {
               await subgraph.query("query")
-            } catch (error) {}
+            } catch (error) { }
 
             expect(fetchMock).toHaveBeenCalledTimes(retries + 1)
           })
@@ -383,10 +384,10 @@ test("subgraph component", function ({ components, stubComponents }) {
             reject = rej
           })
           fetchMock = jest.spyOn(fetch, "fetch").mockImplementation(() => fetchPromise as any)
-          ;(setTimeout as jest.Mock).mockReset().mockImplementation(() => {
-            reject(new Error(errorMessage))
-            return Promise.resolve()
-          })
+            ; (setTimeout as jest.Mock).mockReset().mockImplementation(() => {
+              reject(new Error(errorMessage))
+              return Promise.resolve()
+            })
 
           subgraph = await createSubgraphComponent(components, SUBGRAPH_URL)
         })
@@ -400,7 +401,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
           try {
             await subgraph.query("query")
-          } catch (error) {}
+          } catch (error) { }
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
