@@ -12,8 +12,12 @@ jest.mock("crypto")
 jest.mock("timers/promises")
 
 test("subgraph component", function ({ components, stubComponents }) {
+
+  const randomUUIMock: jest.Mock = randomUUID as any
+  const setTimeoutMock: jest.Mock = setTimeout as any
+
   beforeEach(() => {
-    ; (setTimeout as jest.Mock).mockImplementation((_time: number, name: string) => {
+    setTimeoutMock.mockImplementation((_time: number, name: string) => {
       if (name === "Timeout") {
         return new Promise(() => { })
       } else {
@@ -192,7 +196,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             jest.spyOn(logger, "debug")
             jest.spyOn(logs, "getLogger").mockImplementationOnce(() => logger)
-              ; (randomUUID as jest.Mock).mockReturnValue(queryId)
+            randomUUIMock.mockReturnValue(queryId)
 
             subgraph = await createSubgraphComponent(components, SUBGRAPH_URL)
           })
@@ -384,10 +388,10 @@ test("subgraph component", function ({ components, stubComponents }) {
             reject = rej
           })
           fetchMock = jest.spyOn(fetch, "fetch").mockImplementation(() => fetchPromise as any)
-            ; (setTimeout as jest.Mock).mockReset().mockImplementation(() => {
-              reject(new Error(errorMessage))
-              return Promise.resolve()
-            })
+          setTimeoutMock.mockReset().mockImplementation(() => {
+            reject(new Error(errorMessage))
+            return Promise.resolve()
+          })
 
           subgraph = await createSubgraphComponent(components, SUBGRAPH_URL)
         })
