@@ -1,12 +1,11 @@
 // This file is the "test-environment" analogous for src/components.ts
 // Here we define the test components to be used in the testing environment
 
-import { ILoggerComponent } from "@well-known-components/interfaces"
+import { IFetchComponent, ILoggerComponent } from "@well-known-components/interfaces"
 import { createRunner } from "@well-known-components/test-helpers"
 import { createConfigComponent } from "@well-known-components/env-config-provider"
-import { IFetchComponent } from "@well-known-components/http-server"
 import { createMetricsComponent } from "@well-known-components/metrics"
-import { ISubgraphComponent } from "../src/types"
+import { ISubgraphComponent } from "../src"
 import { createSubgraphComponent, metricDeclarations } from "../src"
 
 export type GlobalContext = { components: ISubgraphComponent.Composable }
