@@ -5,7 +5,7 @@
 ```ts
 
 import { IConfigComponent } from '@well-known-components/interfaces';
-import { IFetchComponent } from '@well-known-components/http-server';
+import { IFetchComponent } from '@well-known-components/interfaces';
 import { ILoggerComponent } from '@well-known-components/interfaces';
 import { IMetricsComponent } from '@well-known-components/interfaces';
 
@@ -44,6 +44,12 @@ export namespace ISubgraphComponent {
 
 // @public
 export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<string>;
+
+// @public (undocumented)
+export type PostQueryResponse<T> = [SubgraphProvider, SubgraphResponse<T>];
+
+// @public (undocumented)
+export type SubgraphProvider = string;
 
 // @public (undocumented)
 export type SubgraphResponse<T> = {

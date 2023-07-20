@@ -16,6 +16,16 @@ export type SubgraphResponse<T> = { data: T; errors?: Error[] | Error }
 /**
  * @public
  */
+export type SubgraphProvider = string
+
+/**
+ * @public
+ */
+export type PostQueryResponse<T> = [SubgraphProvider, SubgraphResponse<T>]
+
+/**
+ * @public
+ */
 export interface ISubgraphComponent {
   /**
    * Query the subgraph using GraphQL

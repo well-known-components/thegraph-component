@@ -1,9 +1,9 @@
-import { ILoggerComponent } from "@well-known-components/interfaces"
-import { IFetchComponent } from "@well-known-components/http-server"
+import { IFetchComponent, ILoggerComponent } from "@well-known-components/interfaces"
 import { randomUUID } from "crypto"
 import { setTimeout } from "timers/promises"
-import { ISubgraphComponent, SubgraphResponse } from "../src/types"
+import { ISubgraphComponent, SubgraphResponse, Variables } from "../src"
 import { createSubgraphComponent } from "../src"
+import { UNKNOWN_SUBGRAPH_PROVIDER } from "../src/utils"
 import { SUBGRAPH_URL, test } from "./components"
 
 type Response = Awaited<ReturnType<IFetchComponent["fetch"]>>
@@ -12,14 +12,19 @@ jest.mock("crypto")
 jest.mock("timers/promises")
 
 test("subgraph component", function ({ components, stubComponents }) {
+
+  const randomUUIMock: jest.Mock = randomUUID as any
+  const setTimeoutMock: jest.Mock = setTimeout as any
+
   beforeEach(() => {
-    ;(setTimeout as jest.Mock).mockImplementation((_time: number, name: string) => {
+    setTimeoutMock.mockImplementation((_time: number, name: string) => {
       if (name === "Timeout") {
-        return new Promise(() => {})
+        return new Promise(() => { })
       } else {
         return Promise.resolve()
       }
     })
+    jest.spyOn(stubComponents.metrics, 'startTimer').mockReturnValue({ end: jest.fn() })
   })
 
   afterEach(() => {
@@ -29,6 +34,8 @@ test("subgraph component", function ({ components, stubComponents }) {
   describe("when querying a subgraph", () => {
     let fetchMock: jest.SpyInstance
     let response: Response
+    const query = "query ThisIsAQuery() {}"
+    let variables: Variables
 
     beforeEach(() => {
       const { metrics } = stubComponents
@@ -47,11 +54,15 @@ test("subgraph component", function ({ components, stubComponents }) {
             someOther: "data",
           },
         }
+
         response = {
           ok: true,
           status: 200,
           json: async () => okResponseData,
-        } as Response
+          headers: new Map(),
+        } as unknown as Response
+
+        variables = { some: "very interesting", variables: ["we have", "here"] }
 
         fetchMock = jest.spyOn(fetch, "fetch").mockImplementationOnce(async () => response)
       })
@@ -70,15 +81,55 @@ test("subgraph component", function ({ components, stubComponents }) {
 
       it("should forward the variables and query to fetch the subgraph", async () => {
         const { subgraph } = components
-        const query = "query ThisIsAQuery() {}"
-        const variables = { some: "very interesting", variables: ["we have", "here"] }
         await subgraph.query(query, variables)
 
         expect(fetchMock).toHaveBeenCalledWith(SUBGRAPH_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "User-agent": "Subgraph component / Unknown sender" },
           body: JSON.stringify({ query, variables }),
           signal: expect.any(AbortSignal),
+        })
+      })
+
+      describe("and the agent name is provided", () => {
+        let subgraph: ISubgraphComponent
+
+        beforeEach(async () => {
+          const { config } = components
+          jest.spyOn(config, "getString").mockImplementation(async (name: string) => {
+            switch (name) {
+              case "SUBGRAPH_COMPONENT_AGENT_NAME":
+                return "An agent"
+              default:
+                return ""
+            }
+          })
+          subgraph = await createSubgraphComponent(components, SUBGRAPH_URL)
+        })
+
+        it("should perform the fetch to the subgraph with the provided user agent", async () => {
+          await subgraph.query(query, variables)
+
+          expect(fetchMock).toHaveBeenCalledWith(SUBGRAPH_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "User-agent": "Subgraph component / An agent" },
+            body: JSON.stringify({ query, variables }),
+            signal: expect.any(AbortSignal),
+          })
+        })
+      })
+
+      describe("and the agent name is not provided", () => {
+        it("should perform the fetch to the subgraph with the provided user agent", async () => {
+          const { subgraph } = components
+          await subgraph.query(query, variables)
+
+          expect(fetchMock).toHaveBeenCalledWith(SUBGRAPH_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "User-agent": "Subgraph component / Unknown sender" },
+            body: JSON.stringify({ query, variables }),
+            signal: expect.any(AbortSignal),
+          })
         })
       })
     })
@@ -93,14 +144,17 @@ test("subgraph component", function ({ components, stubComponents }) {
           response = {
             ok: false,
             status: 500,
-          } as Response
+            headers: new Map(),
+          } as unknown as Response
 
           fetchMock = jest.spyOn(fetch, "fetch").mockImplementationOnce(async () => response)
         })
 
         it("should throw the appropiate error", async () => {
           const { subgraph } = components
-          await expect(subgraph.query("query", {}, 0)).rejects.toThrow(`Invalid request. Status: ${response.status}`)
+          await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+            `Invalid request. Status: ${response.status}. Provider: ${UNKNOWN_SUBGRAPH_PROVIDER}`
+          )
         })
 
         it("should increment the metric", async () => {
@@ -109,11 +163,24 @@ test("subgraph component", function ({ components, stubComponents }) {
 
           try {
             await subgraph.query("query", {}, 0) // no retires
-          } catch (error) {}
+          } catch (error) { }
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
-            errorMessage: `Invalid request. Status: ${response.status}`,
+          })
+        })
+
+        describe("and the response has a subgraph provider header", () => {
+          beforeEach(() => {
+            response.headers.set("X-Subgraph-Provider", "SubgraphProvider")
+          })
+
+          it("should have the subgraph provider in the error message", async () => {
+            const { subgraph } = components
+
+            await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+              `Invalid request. Status: ${response.status}. Provider: SubgraphProvider`
+            )
           })
         })
 
@@ -129,7 +196,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             jest.spyOn(logger, "debug")
             jest.spyOn(logs, "getLogger").mockImplementationOnce(() => logger)
-            ;(randomUUID as jest.Mock).mockReturnValue(queryId)
+            randomUUIMock.mockReturnValue(queryId)
 
             subgraph = await createSubgraphComponent(components, SUBGRAPH_URL)
           })
@@ -139,7 +206,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             try {
               await subgraph.query("query", {}, 0)
-            } catch (error) {}
+            } catch (error) { }
 
             expect(logs.getLogger).toBeCalledWith("thegraph-port")
           })
@@ -160,7 +227,8 @@ test("subgraph component", function ({ components, stubComponents }) {
             ok: true,
             status: 400,
             json: async () => errorResponseData,
-          } as Response
+            headers: new Map(),
+          } as unknown as Response
 
           fetchMock = jest.spyOn(fetch, "fetch").mockImplementationOnce(async () => response)
         })
@@ -171,11 +239,10 @@ test("subgraph component", function ({ components, stubComponents }) {
 
           try {
             await subgraph.query("query", {}, 0) // no retires
-          } catch (error) {}
+          } catch (error) { }
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
-            errorMessage: `GraphQL Error: Invalid response. Errors:\n- ${errorMessage}`,
           })
         })
 
@@ -189,7 +256,23 @@ test("subgraph component", function ({ components, stubComponents }) {
 
           it("should throw an Invalid Response error", async () => {
             const { subgraph } = components
-            await expect(subgraph.query("query", {}, 0)).rejects.toThrow("GraphQL Error: Invalid response.")
+            await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+              `GraphQL Error: Invalid response. Provider: ${UNKNOWN_SUBGRAPH_PROVIDER}`
+            )
+          })
+
+          describe("and the response has a subgraph provider header", () => {
+            beforeEach(() => {
+              response.headers.set("X-Subgraph-Provider", "SubgraphProvider")
+            })
+
+            it("should have the subgraph provider in the error message", async () => {
+              const { subgraph } = components
+
+              await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+                `GraphQL Error: Invalid response. Provider: SubgraphProvider`
+              )
+            })
           })
         })
 
@@ -204,8 +287,22 @@ test("subgraph component", function ({ components, stubComponents }) {
           it("should throw them all", async () => {
             const { subgraph } = components
             await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
-              "GraphQL Error: Invalid response. Errors:\n- some error\n- happened"
+              `GraphQL Error: Invalid response. Errors:\n- some error\n- happened. Provider: ${UNKNOWN_SUBGRAPH_PROVIDER}`
             )
+          })
+
+          describe("and the response has a subgraph provider header", () => {
+            beforeEach(() => {
+              response.headers.set("X-Subgraph-Provider", "SubgraphProvider")
+            })
+
+            it("should have the subgraph provider in the error message", async () => {
+              const { subgraph } = components
+
+              await expect(subgraph.query("query", {}, 0)).rejects.toThrow(
+                `GraphQL Error: Invalid response. Errors:\n- some error\n- happened. Provider: SubgraphProvider`
+              )
+            })
           })
         })
 
@@ -224,7 +321,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             try {
               await subgraph.query("query", {}, retries)
-            } catch (error) {}
+            } catch (error) { }
 
             expect(fetchMock).toHaveBeenCalledTimes(retries + 1)
           })
@@ -235,12 +332,11 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             try {
               await subgraph.query("query", {}, retries)
-            } catch (error) {}
+            } catch (error) { }
 
             expect(metrics.increment).toHaveBeenCalledTimes(retries + 1)
             expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
               url: SUBGRAPH_URL,
-              errorMessage: `GraphQL Error: Invalid response. Errors:\n- ${errorMessage}`,
             })
           })
         })
@@ -272,7 +368,7 @@ test("subgraph component", function ({ components, stubComponents }) {
 
             try {
               await subgraph.query("query")
-            } catch (error) {}
+            } catch (error) { }
 
             expect(fetchMock).toHaveBeenCalledTimes(retries + 1)
           })
@@ -292,7 +388,7 @@ test("subgraph component", function ({ components, stubComponents }) {
             reject = rej
           })
           fetchMock = jest.spyOn(fetch, "fetch").mockImplementation(() => fetchPromise as any)
-          ;(setTimeout as jest.Mock).mockReset().mockImplementation(() => {
+          setTimeoutMock.mockReset().mockImplementation(() => {
             reject(new Error(errorMessage))
             return Promise.resolve()
           })
@@ -309,11 +405,10 @@ test("subgraph component", function ({ components, stubComponents }) {
 
           try {
             await subgraph.query("query")
-          } catch (error) {}
+          } catch (error) { }
 
           expect(metrics.increment).toHaveBeenCalledWith("subgraph_errors_total", {
             url: SUBGRAPH_URL,
-            errorMessage,
           })
         })
       })
