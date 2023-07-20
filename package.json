@@ -42,7 +42,7 @@
     "@well-known-components/interfaces": "^1.4.2"
   },
   "peerDependencies": {
-    "@well-known-components/interfaces": "^1.3.0"
+    "@well-known-components/interfaces": "^1.4.2"
   },
   "files": [
     "dist"
