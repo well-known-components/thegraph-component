@@ -97,7 +97,7 @@ export async function createSubgraphComponent(
       method: "POST",
       headers: { "Content-Type": "application/json", "User-agent": USER_AGENT },
       body: JSON.stringify({ query, variables }),
-      signal: abortController.signal,
+      abortController,
     })
 
     const provider = response.headers.get("X-Subgraph-Provider") ?? UNKNOWN_SUBGRAPH_PROVIDER

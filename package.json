@@ -24,20 +24,20 @@
   },
   "homepage": "https://github.com/well-known-components/thegraph-component#readme",
   "devDependencies": {
-    "@microsoft/api-extractor": "^7.23.2",
-    "@types/jest": "^27.0.1",
-    "@types/node": "^18.15.5",
-    "@well-known-components/env-config-provider": "^1.1.2-20220801195549.commit-101c273",
-    "@well-known-components/logger": "^3.0.0",
+    "@microsoft/api-extractor": "^7.36.3",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^18.16.19",
+    "@well-known-components/env-config-provider": "^1.2.0",
+    "@well-known-components/logger": "^3.1.2",
     "@well-known-components/metrics": "^1.1.3",
-    "@well-known-components/test-helpers": "^1.2.0",
-    "jest": "^27.0.6",
-    "ts-jest": "^27.0.5",
-    "typescript": "^4.6.3",
-    "undici": "^5.21.0"
+    "@well-known-components/test-helpers": "^1.5.3",
+    "jest": "^27.5.1",
+    "ts-jest": "^27.1.5",
+    "typescript": "^4.9.5",
+    "undici": "^5.22.1"
   },
   "dependencies": {
-    "@well-known-components/interfaces": "^1.3.0"
+    "@well-known-components/interfaces": "^1.4.2"
   },
   "peerDependencies": {
     "@well-known-components/interfaces": "^1.3.0"
