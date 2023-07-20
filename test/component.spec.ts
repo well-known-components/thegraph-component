@@ -87,7 +87,7 @@ test("subgraph component", function ({ components, stubComponents }) {
           method: "POST",
           headers: { "Content-Type": "application/json", "User-agent": "Subgraph component / Unknown sender" },
           body: JSON.stringify({ query, variables }),
-          signal: expect.any(AbortSignal),
+          abortController: expect.any(AbortController),
         })
       })
 
@@ -114,7 +114,7 @@ test("subgraph component", function ({ components, stubComponents }) {
             method: "POST",
             headers: { "Content-Type": "application/json", "User-agent": "Subgraph component / An agent" },
             body: JSON.stringify({ query, variables }),
-            signal: expect.any(AbortSignal),
+            abortController: expect.any(AbortController),
           })
         })
       })
@@ -128,7 +128,7 @@ test("subgraph component", function ({ components, stubComponents }) {
             method: "POST",
             headers: { "Content-Type": "application/json", "User-agent": "Subgraph component / Unknown sender" },
             body: JSON.stringify({ query, variables }),
-            signal: expect.any(AbortSignal),
+            abortController: expect.any(AbortController),
           })
         })
       })
