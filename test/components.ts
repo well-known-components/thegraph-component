@@ -1,18 +1,18 @@
 // This file is the "test-environment" analogous for src/components.ts
 // Here we define the test components to be used in the testing environment
 
-import { IFetchComponent, ILoggerComponent } from "@well-known-components/interfaces"
-import { createRunner } from "@well-known-components/test-helpers"
-import { createConfigComponent } from "@well-known-components/env-config-provider"
-import { createMetricsComponent } from "@well-known-components/metrics"
-import { ISubgraphComponent } from "../src"
-import { createSubgraphComponent, metricDeclarations } from "../src"
+import { IFetchComponent, ILoggerComponent } from '@well-known-components/interfaces'
+import { createRunner } from '@well-known-components/test-helpers'
+import { createConfigComponent } from '@well-known-components/env-config-provider'
+import { createMetricsComponent } from '@well-known-components/metrics'
+import { ISubgraphComponent } from '../src'
+import { createSubgraphComponent, metricDeclarations } from '../src'
 
 export type GlobalContext = { components: ISubgraphComponent.Composable }
 
 export type TestComponents = createSubgraphComponent.NeededComponents & ISubgraphComponent.Composable
 
-export const SUBGRAPH_URL = "https://mock-subgraph.url.com"
+export const SUBGRAPH_URL = 'https://mock-subgraph.url.com'
 
 function createTestConsoleLogComponent(): ILoggerComponent {
   return {
@@ -22,9 +22,9 @@ function createTestConsoleLogComponent(): ILoggerComponent {
         debug: () => {},
         error: () => {},
         warn: () => {},
-        info: () => {},
+        info: () => {}
       }
-    },
+    }
   }
 }
 /**
@@ -41,8 +41,8 @@ export const test = createRunner<TestComponents>({
   async initComponents(): Promise<TestComponents> {
     const config = createConfigComponent(process.env, {
       // To avoid open timeout handles, we keep the retry timeouts at bay
-      SUBGRAPH_COMPONENT_QUERY_TIMEOUT: "2000",
-      SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT: "1",
+      SUBGRAPH_COMPONENT_QUERY_TIMEOUT: '2000',
+      SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT: '1'
     })
 
     const logs = createTestConsoleLogComponent()
@@ -52,7 +52,7 @@ export const test = createRunner<TestComponents>({
     const subgraphFetch: IFetchComponent = {
       async fetch() {
         return {} as any
-      },
+      }
     }
 
     const subgraph = await createSubgraphComponent({ config, logs, metrics, fetch: subgraphFetch }, SUBGRAPH_URL)
@@ -62,7 +62,7 @@ export const test = createRunner<TestComponents>({
       logs,
       metrics,
       fetch: subgraphFetch,
-      subgraph,
+      subgraph
     }
-  },
+  }
 })
