@@ -149,7 +149,7 @@ test('subgraph component', function ({ components, stubComponents }) {
           fetchMock = jest.spyOn(fetch, 'fetch').mockImplementationOnce(async () => response)
         })
 
-        it('should throw the appropiate error', async () => {
+        it('should throw the appropriate error', async () => {
           const { subgraph } = components
           await expect(subgraph.query('query', {}, 0)).rejects.toThrow(
             `Invalid request. Status: ${response.status}. Provider: ${UNKNOWN_SUBGRAPH_PROVIDER}`
