@@ -8,8 +8,6 @@ import { createMetricsComponent } from '@well-known-components/metrics'
 import { ISubgraphComponent } from '../src'
 import { createSubgraphComponent, metricDeclarations } from '../src'
 
-export type GlobalContext = { components: ISubgraphComponent.Composable }
-
 export type TestComponents = createSubgraphComponent.NeededComponents & ISubgraphComponent.Composable
 
 export const SUBGRAPH_URL = 'https://mock-subgraph.url.com'
