@@ -20,7 +20,10 @@
   },
   "prettier": {
     "printWidth": 120,
-    "semi": false
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "none",
+    "tabWidth": 2
   },
   "homepage": "https://github.com/well-known-components/thegraph-component#readme",
   "devDependencies": {
@@ -34,6 +37,7 @@
     "@well-known-components/metrics": "^2.0.1",
     "@well-known-components/test-helpers": "^1.5.3",
     "jest": "^29.6.1",
+    "prettier": "^3.0.0",
     "ts-jest": "^29.1.1",
     "typescript": "^5.1.6",
     "undici": "^5.22.1"
