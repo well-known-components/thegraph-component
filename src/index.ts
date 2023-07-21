@@ -2,14 +2,14 @@ import {
   IConfigComponent,
   IFetchComponent,
   ILoggerComponent,
-  IMetricsComponent,
-} from "@well-known-components/interfaces"
-import { randomUUID } from "crypto"
-import { setTimeout } from "timers/promises"
-import { ISubgraphComponent, PostQueryResponse, SubgraphResponse, Variables } from "./types"
-import { UNKNOWN_SUBGRAPH_PROVIDER, withTimeout } from "./utils"
+  IMetricsComponent
+} from '@well-known-components/interfaces'
+import { randomUUID } from 'crypto'
+import { setTimeout } from 'timers/promises'
+import { ISubgraphComponent, PostQueryResponse, SubgraphResponse, Variables } from './types'
+import { UNKNOWN_SUBGRAPH_PROVIDER, withTimeout } from './utils'
 
-export * from "./types"
+export * from './types'
 
 /**
  * Query thegraph's (https://thegraph.com) subgraphs via HTTP.
@@ -23,14 +23,15 @@ export async function createSubgraphComponent(
 ): Promise<ISubgraphComponent> {
   const { logs, metrics, config, fetch } = components
 
-  const logger = logs.getLogger("thegraph-port")
+  const logger = logs.getLogger('thegraph-port')
 
-  const RETRIES = (await config.getNumber("SUBGRAPH_COMPONENT_RETRIES")) ?? 3
-  const TIMEOUT = (await config.getNumber("SUBGRAPH_COMPONENT_QUERY_TIMEOUT")) ?? 10000
-  const TIMEOUT_INCREMENT = (await config.getNumber("SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT")) ?? 10000
-  const BACKOFF = (await config.getNumber("SUBGRAPH_COMPONENT_BACKOFF")) ?? 500
-  const USER_AGENT = `Subgraph component / ${(await config.getString("SUBGRAPH_COMPONENT_AGENT_NAME")) ?? "Unknown sender"
-    }`
+  const RETRIES = (await config.getNumber('SUBGRAPH_COMPONENT_RETRIES')) ?? 3
+  const TIMEOUT = (await config.getNumber('SUBGRAPH_COMPONENT_QUERY_TIMEOUT')) ?? 10000
+  const TIMEOUT_INCREMENT = (await config.getNumber('SUBGRAPH_COMPONENT_TIMEOUT_INCREMENT')) ?? 10000
+  const BACKOFF = (await config.getNumber('SUBGRAPH_COMPONENT_BACKOFF')) ?? 500
+  const USER_AGENT = `Subgraph component / ${
+    (await config.getString('SUBGRAPH_COMPONENT_AGENT_NAME')) ?? 'Unknown sender'
+  }`
 
   async function executeQuery<T>(
     query: string,
@@ -58,24 +59,24 @@ export async function createSubgraphComponent(
       if (hasErrors) {
         const errorMessages = Array.isArray(errors) ? errors.map((error) => error.message) : [errors.message]
         throw new Error(
-          `GraphQL Error: Invalid response. Errors:\n- ${errorMessages.join("\n- ")}. Provider: ${provider}`
+          `GraphQL Error: Invalid response. Errors:\n- ${errorMessages.join('\n- ')}. Provider: ${provider}`
         )
       }
 
       const hasInvalidData = !data || Object.keys(data).length === 0
       if (hasInvalidData) {
-        logger.error("Invalid response", { query, variables, response } as any)
+        logger.error('Invalid response', { query, variables, response } as any)
         throw new Error(`GraphQL Error: Invalid response. Provider: ${provider}`)
       }
 
-      metrics.increment("subgraph_ok_total", { url })
+      metrics.increment('subgraph_ok_total', { url })
 
       return data
     } catch (error) {
       const errorMessage = (error as Error).message
 
-      logger.error("Error:", { ...logData, errorMessage, query, variables: JSON.stringify(variables) })
-      metrics.increment("subgraph_errors_total", { url })
+      logger.error('Error:', { ...logData, errorMessage, query, variables: JSON.stringify(variables) })
+      metrics.increment('subgraph_errors_total', { url })
 
       if (remainingAttempts > 0) {
         await setTimeout(BACKOFF)
@@ -94,13 +95,13 @@ export async function createSubgraphComponent(
     abortController: AbortController
   ): Promise<PostQueryResponse<T>> {
     const response = await fetch.fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "User-agent": USER_AGENT },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'User-agent': USER_AGENT },
       body: JSON.stringify({ query, variables }),
-      abortController,
+      abortController
     })
 
-    const provider = response.headers.get("X-Subgraph-Provider") ?? UNKNOWN_SUBGRAPH_PROVIDER
+    const provider = response.headers.get('X-Subgraph-Provider') ?? UNKNOWN_SUBGRAPH_PROVIDER
 
     if (!response.ok) {
       throw new Error(`Invalid request. Status: ${response.status}. Provider: ${provider}.`)
@@ -110,7 +111,7 @@ export async function createSubgraphComponent(
   }
 
   return {
-    query: executeQuery,
+    query: executeQuery
   }
 }
 
@@ -132,18 +133,18 @@ export namespace createSubgraphComponent {
  */
 export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<string> = {
   subgraph_ok_total: {
-    help: "Subgraph request counter",
+    help: 'Subgraph request counter',
     type: IMetricsComponent.CounterType,
-    labelNames: ["url"],
+    labelNames: ['url']
   },
   subgraph_errors_total: {
-    help: "Subgraph error counter",
+    help: 'Subgraph error counter',
     type: IMetricsComponent.CounterType,
-    labelNames: ["url"],
+    labelNames: ['url']
   },
   subgraph_query_duration_seconds: {
     type: IMetricsComponent.HistogramType,
-    help: "Request duration in seconds.",
-    labelNames: ["url"],
-  },
+    help: 'Request duration in seconds.',
+    labelNames: ['url']
+  }
 }
