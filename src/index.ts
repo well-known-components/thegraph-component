@@ -5,10 +5,10 @@ import {
   IMetricsComponent
 } from '@well-known-components/interfaces'
 import { randomUUID } from 'crypto'
-import { setTimeout } from 'timers/promises'
 import { ISubgraphComponent, PostQueryResponse, SubgraphResponse, Variables } from './types'
 import { metricDeclarations } from './metrics'
 import { UNKNOWN_SUBGRAPH_PROVIDER, withTimeout } from './utils'
+import pRetry from 'p-retry'
 
 export * from './types'
 export { metricDeclarations } from './metrics'
@@ -35,19 +35,35 @@ export async function createSubgraphComponent(
     (await config.getString('SUBGRAPH_COMPONENT_AGENT_NAME')) ?? 'Unknown sender'
   }`
 
-  async function executeQuery<T>(
-    query: string,
-    variables: Variables = {},
-    remainingAttempts: number = RETRIES
-  ): Promise<T> {
-    const attempt = RETRIES - remainingAttempts
-    const attempts = RETRIES + 1
-    const currentAttempt = attempt + 1
-
-    const timeoutWait = TIMEOUT + attempt * TIMEOUT_INCREMENT
+  async function executeQuery<T>(query: string, variables: Variables = {}, maxAttempts: number = RETRIES): Promise<T> {
+    let timeoutWait = TIMEOUT + (maxAttempts - 1) * TIMEOUT_INCREMENT
     const queryId = randomUUID()
-    const logData = { queryId, currentAttempt, attempts, timeoutWait, url }
 
+    let run = async (): Promise<T> => await executeQueryNoRetry<T>(query, variables, timeoutWait)
+
+    return await pRetry<T>(run, {
+      retries: maxAttempts - 1,
+      minTimeout: BACKOFF,
+      onFailedAttempt: (error) => {
+        logger.warn('Error:', {
+          queryId,
+          currentAttempt: error.attemptNumber,
+          attempts: maxAttempts,
+          timeoutWait,
+          url,
+          errorMessage: error.message,
+          query,
+          variables: JSON.stringify(variables)
+        })
+        if (error.retriesLeft === 1) {
+          metrics.increment('subgraph_errors_total', { url })
+        }
+        timeoutWait = TIMEOUT + error.attemptNumber * TIMEOUT_INCREMENT
+      }
+    })
+  }
+
+  async function executeQueryNoRetry<T>(query: string, variables: Variables = {}, timeoutWait: number): Promise<T> {
     const { end } = metrics.startTimer('subgraph_query_duration_seconds', { url })
     try {
       const [provider, response] = await withTimeout(
@@ -57,35 +73,20 @@ export async function createSubgraphComponent(
 
       const { data, errors } = response
 
-      const hasErrors = errors !== undefined
-      if (hasErrors) {
-        const errorMessages = Array.isArray(errors) ? errors.map((error) => error.message) : [errors.message]
-        throw new Error(
-          `GraphQL Error: Invalid response. Errors:\n- ${errorMessages.join('\n- ')}. Provider: ${provider}`
-        )
+      if (errors === undefined) {
+        const hasInvalidData = !data || Object.keys(data).length === 0
+        if (hasInvalidData) {
+          throw new Error(`GraphQL Error: Invalid response. Provider: ${provider}`)
+        }
+
+        metrics.increment('subgraph_ok_total', { url })
+        return data
       }
 
-      const hasInvalidData = !data || Object.keys(data).length === 0
-      if (hasInvalidData) {
-        logger.error('Invalid response', { query, variables, response } as any)
-        throw new Error(`GraphQL Error: Invalid response. Provider: ${provider}`)
-      }
-
-      metrics.increment('subgraph_ok_total', { url })
-
-      return data
-    } catch (error) {
-      const errorMessage = (error as Error).message
-
-      logger.error('Error:', { ...logData, errorMessage, query, variables: JSON.stringify(variables) })
-      metrics.increment('subgraph_errors_total', { url })
-
-      if (remainingAttempts > 0) {
-        await setTimeout(BACKOFF)
-        return executeQuery<T>(query, variables, remainingAttempts - 1)
-      } else {
-        throw error // bubble up
-      }
+      const errorMessages = Array.isArray(errors) ? errors.map((error) => error.message) : [errors.message]
+      throw new Error(
+        `GraphQL Error: Invalid response. Errors:\n- ${errorMessages.join('\n- ')}. Provider: ${provider}`
+      )
     } finally {
       end({ url })
     }

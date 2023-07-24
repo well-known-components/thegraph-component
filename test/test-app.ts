@@ -2,7 +2,7 @@ import { IFetchComponent, Lifecycle } from '@well-known-components/interfaces'
 import { createConfigComponent } from '@well-known-components/env-config-provider'
 import { createLogComponent } from '@well-known-components/logger'
 import { createMetricsComponent } from '@well-known-components/metrics'
-import { createSubgraphComponent, metricDeclarations } from './index'
+import { createSubgraphComponent, metricDeclarations } from '../src'
 import { fetch as undici } from 'undici'
 
 Lifecycle.run({

@@ -43,7 +43,8 @@
     "undici": "^5.22.1"
   },
   "dependencies": {
-    "@well-known-components/interfaces": "^1.4.2"
+    "@well-known-components/interfaces": "^1.4.2",
+    "p-retry": "^4.6.2"
   },
   "peerDependencies": {
     "@well-known-components/interfaces": "^1.4.2"
