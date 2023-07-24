@@ -7,9 +7,11 @@ import {
 import { randomUUID } from 'crypto'
 import { setTimeout } from 'timers/promises'
 import { ISubgraphComponent, PostQueryResponse, SubgraphResponse, Variables } from './types'
+import { metricDeclarations } from './metrics'
 import { UNKNOWN_SUBGRAPH_PROVIDER, withTimeout } from './utils'
 
 export * from './types'
+export { metricDeclarations } from './metrics'
 
 /**
  * Query thegraph's (https://thegraph.com) subgraphs via HTTP.
@@ -132,27 +134,5 @@ export namespace createSubgraphComponent {
     config: IConfigComponent
     fetch: IFetchComponent
     metrics: IMetricsComponent<keyof typeof metricDeclarations>
-  }
-}
-
-/**
- * Metrics declarations, needed for your IMetricsComponent
- * @public
- */
-export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<string> = {
-  subgraph_ok_total: {
-    help: 'Subgraph request counter',
-    type: IMetricsComponent.CounterType,
-    labelNames: ['url']
-  },
-  subgraph_errors_total: {
-    help: 'Subgraph error counter',
-    type: IMetricsComponent.CounterType,
-    labelNames: ['url', 'kind']
-  },
-  subgraph_query_duration_seconds: {
-    type: IMetricsComponent.HistogramType,
-    help: 'Request duration in seconds.',
-    labelNames: ['url']
   }
 }
