@@ -83,6 +83,7 @@ export async function createSubgraphComponent(
         kind = 'invalid_block'
       } else if (errorMessage.includes('Unexpected `')) {
         kind = 'syntax_error'
+        remainingAttempts = 0
       } else if (error.name === 'AbortError') {
         kind = 'timeout'
       }
