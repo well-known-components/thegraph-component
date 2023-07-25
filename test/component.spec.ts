@@ -377,6 +377,42 @@ test('subgraph component', function ({ components, stubComponents }) {
         })
       })
 
+      describe.each([
+        ['when the query is syntactically incorrect', 'Unexpected `{[Punctuator]`\\nExpected `', 'syntax_error'],
+        ['when the query is made over an invalid block', 'Failed to decode `block.number`', 'invalid_block']
+      ])('%s', (_name: string, errorMessage: string, expectedKind: string) => {
+        beforeEach(() => {
+          const { fetch } = components
+
+          errorResponseData = {
+            data: undefined,
+            errors: [{ message: errorMessage }]
+          }
+          response = {
+            ok: true,
+            status: 200,
+            json: async () => errorResponseData,
+            headers: new Map()
+          } as unknown as Response
+
+          fetchMock = jest.spyOn(fetch, 'fetch').mockImplementationOnce(async () => response)
+        })
+
+        it('should increment the metric', async () => {
+          const { subgraph } = components
+          const { metrics } = stubComponents
+
+          try {
+            await subgraph.query('query', {}, 0) // no retries
+          } catch (error) {}
+
+          expect(metrics.increment).toHaveBeenCalledWith('subgraph_errors_total', {
+            url: SUBGRAPH_URL,
+            kind: expectedKind
+          })
+        })
+      })
+
       describe('when the timeout is reached', () => {
         let subgraph: ISubgraphComponent
 
@@ -391,7 +427,9 @@ test('subgraph component', function ({ components, stubComponents }) {
           })
           fetchMock = jest.spyOn(fetch, 'fetch').mockImplementation(() => fetchPromise as any)
           setTimeoutMock.mockReset().mockImplementation(() => {
-            reject(new Error(errorMessage))
+            const error = new Error(errorMessage)
+            error.name = 'AbortError'
+            reject(error)
             return Promise.resolve()
           })
 
@@ -411,7 +449,7 @@ test('subgraph component', function ({ components, stubComponents }) {
 
           expect(metrics.increment).toHaveBeenCalledWith('subgraph_errors_total', {
             url: SUBGRAPH_URL,
-            kind: 'unknown'
+            kind: 'timeout'
           })
         })
       })

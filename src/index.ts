@@ -79,7 +79,7 @@ export async function createSubgraphComponent(
       let kind = 'unknown'
       if (errorMessage.includes('Failed to decode `block.number`')) {
         kind = 'invalid_block'
-      } else if (errorMessage.startsWith('Unexpected ')) {
+      } else if (errorMessage.includes('Unexpected `')) {
         kind = 'syntax_error'
       } else if (error.name === 'AbortError') {
         kind = 'timeout'
