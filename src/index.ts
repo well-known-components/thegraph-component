@@ -65,18 +65,26 @@ export async function createSubgraphComponent(
 
       const hasInvalidData = !data || Object.keys(data).length === 0
       if (hasInvalidData) {
-        logger.error('Invalid response', { query, variables, response } as any)
+        logger.warn('Invalid response', { query, variables, response } as any)
         throw new Error(`GraphQL Error: Invalid response. Provider: ${provider}`)
       }
 
       metrics.increment('subgraph_ok_total', { url })
 
       return data
-    } catch (error) {
+    } catch (error: any) {
       const errorMessage = (error as Error).message
+      logger.warn('Error:', { ...logData, errorMessage, query, variables: JSON.stringify(variables) })
 
-      logger.error('Error:', { ...logData, errorMessage, query, variables: JSON.stringify(variables) })
-      metrics.increment('subgraph_errors_total', { url })
+      let kind = 'unknown'
+      if (errorMessage.includes('Failed to decode `block.number`')) {
+        kind = 'invalid_block'
+      } else if (errorMessage.startsWith('Unexpected ')) {
+        kind = 'syntax_error'
+      } else if (error.name === 'AbortError') {
+        kind = 'timeout'
+      }
+      metrics.increment('subgraph_errors_total', { url, kind })
 
       if (remainingAttempts > 0) {
         await setTimeout(BACKOFF)
@@ -140,7 +148,7 @@ export const metricDeclarations: IMetricsComponent.MetricsRecordDefinition<strin
   subgraph_errors_total: {
     help: 'Subgraph error counter',
     type: IMetricsComponent.CounterType,
-    labelNames: ['url']
+    labelNames: ['url', 'kind']
   },
   subgraph_query_duration_seconds: {
     type: IMetricsComponent.HistogramType,

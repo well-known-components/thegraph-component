@@ -165,7 +165,8 @@ test('subgraph component', function ({ components, stubComponents }) {
           } catch (error) {}
 
           expect(metrics.increment).toHaveBeenCalledWith('subgraph_errors_total', {
-            url: SUBGRAPH_URL
+            url: SUBGRAPH_URL,
+            kind: 'unknown'
           })
         })
 
@@ -241,7 +242,8 @@ test('subgraph component', function ({ components, stubComponents }) {
           } catch (error) {}
 
           expect(metrics.increment).toHaveBeenCalledWith('subgraph_errors_total', {
-            url: SUBGRAPH_URL
+            url: SUBGRAPH_URL,
+            kind: 'unknown'
           })
         })
 
@@ -335,7 +337,8 @@ test('subgraph component', function ({ components, stubComponents }) {
 
             expect(metrics.increment).toHaveBeenCalledTimes(retries + 1)
             expect(metrics.increment).toHaveBeenCalledWith('subgraph_errors_total', {
-              url: SUBGRAPH_URL
+              url: SUBGRAPH_URL,
+              kind: 'unknown'
             })
           })
         })
@@ -407,7 +410,8 @@ test('subgraph component', function ({ components, stubComponents }) {
           } catch (error) {}
 
           expect(metrics.increment).toHaveBeenCalledWith('subgraph_errors_total', {
-            url: SUBGRAPH_URL
+            url: SUBGRAPH_URL,
+            kind: 'unknown'
           })
         })
       })
